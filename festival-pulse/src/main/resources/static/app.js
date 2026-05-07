@@ -1,57 +1,98 @@
 // ── Role-based access ────────────────────────────────────────────────────────
-const role = sessionStorage.getItem('fpRole');
-if (!role) { location.href = 'index.html'; }
+const role = sessionStorage.getItem("fpRole");
+if (!role) {
+  location.href = "index.html";
+}
 
-const ROLE_LABELS     = { organiser: 'Organiser', steward: 'Steward', viewer: 'Viewer' };
-const ROLE_DOT_COLORS = { organiser: '#7c3aed',   steward: '#1d4ed8',  viewer: '#059669' };
+const ROLE_LABELS = {
+  organiser: "Organiser",
+  steward: "Steward",
+  viewer: "Viewer",
+};
+const ROLE_DOT_COLORS = {
+  organiser: "#7c3aed",
+  steward: "#1d4ed8",
+  viewer: "#059669",
+};
 
 function initRole() {
-  document.body.classList.add('role-' + role);
-  document.querySelectorAll('.nav-link[data-roles]').forEach(link => {
-    if (!link.dataset.roles.split(',').includes(role)) link.remove();
+  document.body.classList.add("role-" + role);
+  document.querySelectorAll(".nav-link[data-roles]").forEach((link) => {
+    if (!link.dataset.roles.split(",").includes(role)) link.remove();
   });
-  const label = document.getElementById('role-label');
-  const dot   = document.getElementById('role-dot');
+  const label = document.getElementById("role-label");
+  const dot = document.getElementById("role-dot");
   if (label) label.textContent = ROLE_LABELS[role] || role;
-  if (dot)   dot.style.background = ROLE_DOT_COLORS[role] || '#667085';
+  if (dot) dot.style.background = ROLE_DOT_COLORS[role] || "#667085";
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Festival centre: Athlone, County Westmeath, Ireland
-const FESTIVAL_CENTRE = [53.42944, -7.90000]; // Ericsson Software Campus, Cornamaddy, Athlone
+const FESTIVAL_CENTRE = [53.42944, -7.9]; // Ericsson Software Campus, Cornamaddy, Athlone
 const AREA_COORDS = [
-  { name: "Main Stage",      lat: 53.43120, lng: -7.90280, type: "stage",    svgIcon: "stage"    },
-  { name: "Food Village",    lat: 53.43050, lng: -7.89720, type: "food",     svgIcon: "food"     },
-  { name: "Dance Tent",      lat: 53.42820, lng: -7.90260, type: "tent",     svgIcon: "tent"     },
-  { name: "Bar Area",        lat: 53.42880, lng: -7.89760, type: "bar",      svgIcon: "bar"      },
-  { name: "Entrance / Exit", lat: 53.42680, lng: -7.90000, type: "entrance", svgIcon: "entrance" }
+  {
+    name: "Main Stage",
+    lat: 53.4312,
+    lng: -7.9028,
+    type: "stage",
+    svgIcon: "stage",
+  },
+  {
+    name: "Food Village",
+    lat: 53.4305,
+    lng: -7.8972,
+    type: "food",
+    svgIcon: "food",
+  },
+  {
+    name: "Dance Tent",
+    lat: 53.4282,
+    lng: -7.9026,
+    type: "tent",
+    svgIcon: "tent",
+  },
+  { name: "Bar Area", lat: 53.4288, lng: -7.8976, type: "bar", svgIcon: "bar" },
+  {
+    name: "Entrance / Exit",
+    lat: 53.4268,
+    lng: -7.9,
+    type: "entrance",
+    svgIcon: "entrance",
+  },
 ];
 const CROWD_WEIGHTS = { LOW: 0.25, MEDIUM: 0.65, FULL: 1.0 };
 
 // SVG icons for venue pins
 const VENUE_SVGS = {
-  stage:    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 7H3l9-7zm0 2.5L5.5 10h13L12 5.5zM3 11h18v2H3v-2zm2 3h14v7H5v-7zm2 2v3h10v-3H7z"/></svg>`,
-  food:     `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>`,
-  tent:     `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 19h20L12 2zm0 3.5L19.5 19h-15L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>`,
-  bar:      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v2l6.5 9V19H8v2h8v-2h-2.5v-5L20 5V3zm-2.5 2l-2 3h-7l-2-3h11z"/></svg>`,
+  stage: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 7H3l9-7zm0 2.5L5.5 10h13L12 5.5zM3 11h18v2H3v-2zm2 3h14v7H5v-7zm2 2v3h10v-3H7z"/></svg>`,
+  food: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>`,
+  tent: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 19h20L12 2zm0 3.5L19.5 19h-15L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>`,
+  bar: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v2l6.5 9V19H8v2h8v-2h-2.5v-5L20 5V3zm-2.5 2l-2 3h-7l-2-3h11z"/></svg>`,
   entrance: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1h-3c-.55 0-1 .45-1 1v5h-4V7c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z"/></svg>`,
-  default:  `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>`
+  default: `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>`,
 };
 
 // Legacy shape lookup kept for report table icon display
 const areaShapes = [
-  { name: "Main Stage",      x: 56,  y: 62,  width: 300, height: 170, icon: "🎤" },
-  { name: "Food Village",    x: 540, y: 54,  width: 300, height: 150, icon: "🍔" },
-  { name: "Dance Tent",      x: 88,  y: 324, width: 248, height: 170, icon: "🎧" },
-  { name: "Bar Area",        x: 396, y: 348, width: 222, height: 130, icon: "🍺" },
-  { name: "Entrance / Exit", x: 666, y: 386, width: 190, height: 104, icon: "🚪" }
+  { name: "Main Stage", x: 56, y: 62, width: 300, height: 170, icon: "🎤" },
+  { name: "Food Village", x: 540, y: 54, width: 300, height: 150, icon: "🍔" },
+  { name: "Dance Tent", x: 88, y: 324, width: 248, height: 170, icon: "🎧" },
+  { name: "Bar Area", x: 396, y: 348, width: 222, height: 130, icon: "🍺" },
+  {
+    name: "Entrance / Exit",
+    x: 666,
+    y: 386,
+    width: 190,
+    height: 104,
+    icon: "🚪",
+  },
 ];
 
 const state = {
   areas: [],
   reports: [],
   alerts: [],
-  activeAlerts: []
+  activeAlerts: [],
 };
 
 const pages = {
@@ -59,7 +100,7 @@ const pages = {
   areas: document.querySelector("#areas-page"),
   reports: document.querySelector("#reports-page"),
   detail: document.querySelector("#report-detail-page"),
-  alerts: document.querySelector("#alerts-page")
+  alerts: document.querySelector("#alerts-page"),
 };
 
 const pageTitle = document.querySelector("#page-title");
@@ -84,7 +125,7 @@ function formatDate(value) {
     month: "short",
     day: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
   });
 }
 
@@ -106,20 +147,26 @@ function getReporter(report) {
 }
 
 function shapeFor(area, index) {
-  return areaShapes.find((shape) => shape.name === area.name) || {
-    x: 70 + (index % 3) * 270,
-    y: 80 + Math.floor(index / 3) * 172,
-    width: 230,
-    height: 126
-  };
+  return (
+    areaShapes.find((shape) => shape.name === area.name) || {
+      x: 70 + (index % 3) * 270,
+      y: 80 + Math.floor(index / 3) * 172,
+      width: 230,
+      height: 126,
+    }
+  );
 }
 
 function sortedReports() {
-  return [...state.reports].sort((a, b) => new Date(b.reportedAt || 0) - new Date(a.reportedAt || 0));
+  return [...state.reports].sort(
+    (a, b) => new Date(b.reportedAt || 0) - new Date(a.reportedAt || 0),
+  );
 }
 
 function sortedAlerts() {
-  return [...state.alerts].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  return [...state.alerts].sort(
+    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0),
+  );
 }
 
 function countAreasByLevel(level) {
@@ -144,7 +191,10 @@ function activatePage(route) {
   activePage.hidden = false;
 
   document.querySelectorAll(".nav-link").forEach((link) => {
-    link.classList.toggle("active", link.dataset.route === (isDetail ? "reports" : route));
+    link.classList.toggle(
+      "active",
+      link.dataset.route === (isDetail ? "reports" : route),
+    );
   });
 }
 
@@ -204,23 +254,26 @@ function renderDashboard() {
 }
 
 function coordsFor(area) {
-  const found = AREA_COORDS.find(c => c.name === area.name);
+  const found = AREA_COORDS.find((c) => c.name === area.name);
   if (found) return found;
   // Use stored lat/lng if backend has them, else scatter around centre
-  if (area.latitude && area.longitude) return { lat: area.latitude, lng: area.longitude, svgIcon: "default" };
+  if (area.latitude && area.longitude)
+    return { lat: area.latitude, lng: area.longitude, svgIcon: "default" };
+  area.latitude = FESTIVAL_CENTRE[0] + (Math.random() - 0.5) * 0.008;
+  area.longitude = FESTIVAL_CENTRE[1] + (Math.random() - 0.5) * 0.008;
   return {
-    lat: FESTIVAL_CENTRE[0] + (Math.random()-0.5)*0.008,
-    lng: FESTIVAL_CENTRE[1] + (Math.random()-0.5)*0.008,
-    svgIcon: "default"
+    lat: area.latitude,
+    lng: area.longitude,
+    svgIcon: "default",
   };
 }
 
 function venueIcon(area, level, hasAlert, draggable) {
   const c = coordsFor(area);
   const svg = VENUE_SVGS[c.svgIcon] || VENUE_SVGS.default;
-  const levelCls = `level-${(level||"unknown").toLowerCase()}`;
+  const levelCls = `level-${(level || "unknown").toLowerCase()}`;
   const alertCls = hasAlert ? " has-alert" : "";
-  const dragCls  = draggable ? " draggable-pin" : "";
+  const dragCls = draggable ? " draggable-pin" : "";
   return L.divIcon({
     className: "",
     html: `<div class="venue-pin ${levelCls}${alertCls}${dragCls}">
@@ -231,37 +284,47 @@ function venueIcon(area, level, hasAlert, draggable) {
              <strong>${area.name}</strong>
              <span>${level || "—"}</span>
            </div>`,
-    iconSize:   [56, 72],
+    iconSize: [56, 72],
     iconAnchor: [28, 64],
-    popupAnchor:[0, -64]
+    popupAnchor: [0, -64],
   });
 }
-
 
 function buildHeatPoints(areas) {
   const pts = [];
   for (const area of areas) {
     const c = coordsFor(area);
     const w = CROWD_WEIGHTS[area.currentCrowdLevel] || 0.1;
-    const spread = area.currentCrowdLevel === "FULL" ? 0.0007 :
-                   area.currentCrowdLevel === "MEDIUM" ? 0.00045 : 0.00025;
-    const count  = area.currentCrowdLevel === "FULL" ? 18 :
-                   area.currentCrowdLevel === "MEDIUM" ? 10 : 5;
+    const spread =
+      area.currentCrowdLevel === "FULL"
+        ? 0.0007
+        : area.currentCrowdLevel === "MEDIUM"
+          ? 0.00045
+          : 0.00025;
+    const count =
+      area.currentCrowdLevel === "FULL"
+        ? 18
+        : area.currentCrowdLevel === "MEDIUM"
+          ? 10
+          : 5;
     pts.push([c.lat, c.lng, w]);
     for (let i = 0; i < count; i++) {
       pts.push([
-        c.lat + (Math.random()-0.5)*spread,
-        c.lng + (Math.random()-0.5)*spread,
-        w * (0.55 + Math.random()*0.35)
+        c.lat + (Math.random() - 0.5) * spread,
+        c.lng + (Math.random() - 0.5) * spread,
+        w * (0.55 + Math.random() * 0.35),
       ]);
     }
   }
   return pts;
 }
 
-
 function levelColour(level) {
-  return level === "FULL" ? "#ef4444" : level === "MEDIUM" ? "#f59e0b" : "#22c55e";
+  return level === "FULL"
+    ? "#ef4444"
+    : level === "MEDIUM"
+      ? "#f59e0b"
+      : "#22c55e";
 }
 
 let _orgMap = null;
@@ -324,11 +387,16 @@ function renderAreas() {
 
   function showEditPanel(show) {
     const panel = document.getElementById("area-detail-panel");
-    if (!show) { panel.hidden = true; return; }
+    if (!show) {
+      panel.hidden = true;
+      return;
+    }
     panel.hidden = false;
 
-    const FIELD = "width:100%;background:#0d1117;border:1px solid #1e293b;border-radius:6px;color:#e2e8f0;font-size:13px;padding:8px 10px";
-    const LABEL = "font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px";
+    const FIELD =
+      "width:100%;background:#0d1117;border:1px solid #1e293b;border-radius:6px;color:#e2e8f0;font-size:13px;padding:8px 10px";
+    const LABEL =
+      "font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px";
 
     document.getElementById("detail-content").innerHTML = `
       <div class="detail-area-name" style="margin-bottom:14px">Edit Map</div>
@@ -371,7 +439,7 @@ function renderAreas() {
     renderAreaEditList();
 
     // Radius slider
-    document.getElementById("radius-slider").addEventListener("input", e => {
+    document.getElementById("radius-slider").addEventListener("input", (e) => {
       boundaryRadius = parseInt(e.target.value);
       document.getElementById("radius-val").textContent = boundaryRadius + "m";
       boundaryCircle.setRadius(boundaryRadius);
@@ -381,47 +449,70 @@ function renderAreas() {
     if (ei && !ei.value) ei.placeholder = "e.g. N37 HD52 (Ericsson Athlone)";
 
     // Eircode geocoding
-    document.getElementById("eircode-btn").addEventListener("click", async () => {
-      const eircode = document.getElementById("eircode-input").value.trim();
-      const msg = document.getElementById("eircode-msg");
-      if (!eircode) { msg.textContent = "Enter an Eircode first."; return; }
-      msg.textContent = "Searching…";
-      try {
-        const url = "https://nominatim.openstreetmap.org/search?" +
-          "q=" + encodeURIComponent(eircode + " Ireland") +
-          "&countrycodes=ie&format=json&limit=1";
-        const data = await fetch(url).then(r => r.json());
-        if (!data.length) { msg.textContent = "Eircode not found. Try routing key only (e.g. N37)."; return; }
-        mapCentre = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
-        boundaryCircle.setLatLng(mapCentre);
-        _orgMap.flyTo(mapCentre, 16, { duration: 1.2 });
-        msg.textContent = "✓ " + data[0].display_name.split(",")[0];
-      } catch {
-        msg.textContent = "Geocoding failed — check connection.";
-      }
-    });
+    document
+      .getElementById("eircode-btn")
+      .addEventListener("click", async () => {
+        const eircode = document.getElementById("eircode-input").value.trim();
+        const msg = document.getElementById("eircode-msg");
+        if (!eircode) {
+          msg.textContent = "Enter an Eircode first.";
+          return;
+        }
+        msg.textContent = "Searching…";
+        try {
+          const url =
+            "https://nominatim.openstreetmap.org/search?" +
+            "q=" +
+            encodeURIComponent(eircode + " Ireland") +
+            "&countrycodes=ie&format=json&limit=1";
+          const data = await fetch(url).then((r) => r.json());
+          if (!data.length) {
+            msg.textContent =
+              "Eircode not found. Try routing key only (e.g. N37).";
+            return;
+          }
+          mapCentre = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+          boundaryCircle.setLatLng(mapCentre);
+          _orgMap.flyTo(mapCentre, 16, { duration: 1.2 });
+          msg.textContent = "✓ " + data[0].display_name.split(",")[0];
+        } catch {
+          msg.textContent = "Geocoding failed — check connection.";
+        }
+      });
 
     // Add area
-    document.getElementById("add-area-btn").addEventListener("click", async () => {
-      const name = document.getElementById("new-area-name").value.trim();
-      const msg  = document.getElementById("add-area-msg");
-      if (!name) { msg.textContent = "Name is required."; return; }
-      const res = await fetch("/api/areas", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name })
+    document
+      .getElementById("add-area-btn")
+      .addEventListener("click", async () => {
+        const name = document.getElementById("new-area-name").value.trim();
+        const msg = document.getElementById("add-area-msg");
+        if (!name) {
+          msg.textContent = "Name is required.";
+          return;
+        }
+        const res = await fetch("/api/areas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
+        });
+        if (res.ok) {
+          document.getElementById("new-area-name").value = "";
+          msg.textContent = "✓ Area added.";
+          await loadData();
+          renderAreaEditList();
+          buildMarkers(editMode);
+        } else {
+          msg.textContent = "Failed to add area.";
+        }
       });
-      if (res.ok) {
-        document.getElementById("new-area-name").value = "";
-        msg.textContent = "✓ Area added.";
-        await loadData(); renderAreaEditList(); buildMarkers(editMode);
-      } else { msg.textContent = "Failed to add area."; }
-    });
   }
 
   function renderAreaEditList() {
     const list = document.getElementById("area-edit-list");
     if (!list) return;
-    list.innerHTML = state.areas.map(area => `
+    list.innerHTML = state.areas
+      .map(
+        (area) => `
       <div class="edit-area-row" data-id="${area.id}">
         <input class="edit-area-input" value="${escapeHtml(area.name)}"
           style="flex:1;background:#0d1117;border:1px solid #1e293b;border-radius:6px;color:#e2e8f0;font-size:12px;padding:6px 8px">
@@ -430,26 +521,39 @@ function renderAreas() {
         <button class="del-area-btn" data-id="${area.id}" title="Delete"
           style="background:#ef4444;color:#fff;border:none;border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:900">✕</button>
       </div>
-    `).join("");
+    `,
+      )
+      .join("");
 
-    list.querySelectorAll(".save-area-btn").forEach(btn => {
+    list.querySelectorAll(".save-area-btn").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        const row  = btn.closest(".edit-area-row");
+        const row = btn.closest(".edit-area-row");
         const name = row.querySelector(".edit-area-input").value.trim();
         if (!name) return;
         const res = await fetch(`/api/areas/${btn.dataset.id}`, {
-          method: "PUT", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name })
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name }),
         });
-        if (res.ok) { await loadData(); renderAreaEditList(); buildMarkers(editMode); }
+        if (res.ok) {
+          await loadData();
+          renderAreaEditList();
+          buildMarkers(editMode);
+        }
       });
     });
 
-    list.querySelectorAll(".del-area-btn").forEach(btn => {
+    list.querySelectorAll(".del-area-btn").forEach((btn) => {
       btn.addEventListener("click", async () => {
         if (!confirm("Delete this area?")) return;
-        const res = await fetch(`/api/areas/${btn.dataset.id}`, { method: "DELETE" });
-        if (res.ok) { await loadData(); renderAreaEditList(); buildMarkers(editMode); }
+        const res = await fetch(`/api/areas/${btn.dataset.id}`, {
+          method: "DELETE",
+        });
+        if (res.ok) {
+          await loadData();
+          renderAreaEditList();
+          buildMarkers(editMode);
+        }
       });
     });
   }
@@ -467,32 +571,55 @@ function renderAreas() {
     boxZoom: true,
     keyboard: true,
     zoomControl: true,
-    attributionControl: false
+    attributionControl: false,
   });
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 20 }).addTo(_orgMap);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+    maxZoom: 20,
+  }).addTo(_orgMap);
 
   // Mutable festival boundary ring
   let mapCentre = [...FESTIVAL_CENTRE];
   let boundaryRadius = 350;
   let boundaryCircle = L.circle(mapCentre, {
-    radius: boundaryRadius, color: "#2563eb", weight: 2, dashArray: "8 6",
-    fillColor: "#2563eb", fillOpacity: 0.05
+    radius: boundaryRadius,
+    color: "#2563eb",
+    weight: 2,
+    dashArray: "8 6",
+    fillColor: "#2563eb",
+    fillOpacity: 0.05,
   }).addTo(_orgMap);
 
   // Draggable centre handle for boundary circle (organiser edit mode only)
-  const centreHandleIcon = L.divIcon({ className: "arena-handle arena-centre-handle", html: "⊕", iconSize: [24,24], iconAnchor: [12,12] });
-  const centreHandle = L.marker(mapCentre, { icon: centreHandleIcon, draggable: true, zIndexOffset: 1000 });
+  const centreHandleIcon = L.divIcon({
+    className: "arena-handle arena-centre-handle",
+    html: "⊕",
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+  });
+  const centreHandle = L.marker(mapCentre, {
+    icon: centreHandleIcon,
+    draggable: true,
+    zIndexOffset: 1000,
+  });
   if (isOrganiser) centreHandle.addTo(_orgMap);
-  centreHandle.on("drag", e => {
+  centreHandle.on("drag", (e) => {
     mapCentre = [e.target.getLatLng().lat, e.target.getLatLng().lng];
     boundaryCircle.setLatLng(mapCentre);
   });
 
   // Heatmap layer
   const heatLayer = L.heatLayer(buildHeatPoints(state.areas), {
-    radius: 42, blur: 34, maxZoom: 19, max: 1.0,
-    gradient: { 0.20: "#22c55e", 0.45: "#facc15", 0.70: "#f97316", 1.00: "#ef4444" }
+    radius: 42,
+    blur: 34,
+    maxZoom: 19,
+    max: 1.0,
+    gradient: {
+      0.2: "#22c55e",
+      0.45: "#facc15",
+      0.7: "#f97316",
+      1.0: "#ef4444",
+    },
   }).addTo(_orgMap);
 
   // Marker layer group
@@ -500,23 +627,27 @@ function renderAreas() {
 
   function buildMarkers(isDraggable) {
     markerGroup.clearLayers();
-    Object.keys(editMarkers).forEach(k => delete editMarkers[k]);
+    Object.keys(editMarkers).forEach((k) => delete editMarkers[k]);
 
-    state.areas.forEach(area => {
+    state.areas.forEach((area) => {
       const c = coordsFor(area);
       const level = area.currentCrowdLevel || "UNKNOWN";
-      const hasAlert = state.activeAlerts.some(a => a.area?.id === area.id);
+      const hasAlert = state.activeAlerts.some((a) => a.area?.id === area.id);
 
       // Alert ring
       if (hasAlert) {
         L.circleMarker([c.lat, c.lng], {
-          radius: 38, color: "#ef4444", weight: 2, fillOpacity: 0, className: "alert-ring"
+          radius: 38,
+          color: "#ef4444",
+          weight: 2,
+          fillOpacity: 0,
+          className: "alert-ring",
         }).addTo(markerGroup);
       }
 
       const marker = L.marker([c.lat, c.lng], {
         icon: venueIcon(area, level, hasAlert, isDraggable),
-        draggable: isDraggable
+        draggable: isDraggable,
       }).addTo(markerGroup);
 
       if (isDraggable) {
@@ -527,32 +658,47 @@ function renderAreas() {
           await fetch(`/api/areas/${area.id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: area.name, latitude: pos.lat, longitude: pos.lng })
+            body: JSON.stringify({
+              name: area.name,
+              latitude: pos.lat,
+              longitude: pos.lng,
+            }),
           });
           // Update local AREA_COORDS so heatmap refreshes correctly
-          const coord = AREA_COORDS.find(c => c.name === area.name);
-          if (coord) { coord.lat = pos.lat; coord.lng = pos.lng; }
+          const coord = AREA_COORDS.find((c) => c.name === area.name);
+          if (coord) {
+            coord.lat = pos.lat;
+            coord.lng = pos.lng;
+          }
+          area.latitude = pos.lat;
+          area.longitude = pos.lng;
           heatLayer.setLatLngs(buildHeatPoints(state.areas));
         });
       } else {
         marker.on("click", () => {
-          const alert = state.activeAlerts.find(a => a.area?.id === area.id);
+          const alert = state.activeAlerts.find((a) => a.area?.id === area.id);
           document.getElementById("detail-content").innerHTML = `
             <div class="detail-area-name">${escapeHtml(area.name)}</div>
             <div class="detail-level-badge ${levelClass(level)}">${level}</div>
-            ${alert ? `<div class="detail-alert-box">
+            ${
+              alert
+                ? `<div class="detail-alert-box">
               <strong>⚠ Active Alert</strong>
               <p>${escapeHtml(alert.message)}</p>
               <button class="resolve-button" data-alert-id="${alert.id}">Resolve Alert</button>
-            </div>` : "<p class='detail-no-alert'>No active alert</p>"}
+            </div>`
+                : "<p class='detail-no-alert'>No active alert</p>"
+            }
             <p class="detail-coords">📍 ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</p>
           `;
           const panel = document.getElementById("area-detail-panel");
           panel.hidden = false;
-          panel.querySelector(".resolve-button")?.addEventListener("click", async e => {
-            await resolveAlert(e.target.dataset.alertId);
-            panel.hidden = true;
-          });
+          panel
+            .querySelector(".resolve-button")
+            ?.addEventListener("click", async (e) => {
+              await resolveAlert(e.target.dataset.alertId);
+              panel.hidden = true;
+            });
         });
       }
     });
@@ -562,7 +708,6 @@ function renderAreas() {
   buildMarkers(editMode);
   if (isOrganiser) showEditPanel(true);
 }
-
 
 function renderReportTable(reports, compact = false) {
   if (reports.length === 0) {
@@ -582,7 +727,9 @@ function renderReportTable(reports, compact = false) {
           </tr>
         </thead>
         <tbody>
-          ${reports.map((report) => `
+          ${reports
+            .map(
+              (report) => `
             <tr class="clickable-row" data-report-id="${report.id}">
               <td>${formatDate(report.reportedAt)}</td>
               <td>${escapeHtml(report.area?.name || "Unknown area")}</td>
@@ -590,7 +737,9 @@ function renderReportTable(reports, compact = false) {
               <td>${escapeHtml(getReportNote(report))}</td>
               <td>${escapeHtml(getReporter(report))}</td>
             </tr>
-          `).join("")}
+          `,
+            )
+            .join("")}
         </tbody>
       </table>
     </div>
@@ -620,8 +769,13 @@ function renderReports() {
 }
 
 function renderReportDetail(reportId) {
-  const report = state.reports.find((item) => String(item.id) === String(reportId));
-  setHeading("Report Details", report ? `${report.area?.name || "Area"} Report` : "Report Details");
+  const report = state.reports.find(
+    (item) => String(item.id) === String(reportId),
+  );
+  setHeading(
+    "Report Details",
+    report ? `${report.area?.name || "Area"} Report` : "Report Details",
+  );
 
   if (!report) {
     pages.detail.innerHTML = `
@@ -633,7 +787,9 @@ function renderReportDetail(reportId) {
     return;
   }
 
-  const relatedAlert = state.alerts.find((alert) => alert.area?.id === report.area?.id && alert.status === "ACTIVE");
+  const relatedAlert = state.alerts.find(
+    (alert) => alert.area?.id === report.area?.id && alert.status === "ACTIVE",
+  );
   pages.detail.innerHTML = `
     <section class="detail-grid">
       <article class="panel detail-card primary-detail">
@@ -680,7 +836,9 @@ function renderAlertList(alerts, showResolve = true) {
 
   return `
     <div class="alert-list">
-      ${alerts.map((alert) => `
+      ${alerts
+        .map(
+          (alert) => `
         <article class="alert-card ${statusClass(alert.status)}">
           <div>
             <div class="alert-card-title">${escapeHtml(alert.area?.name || "Unknown area")}</div>
@@ -692,7 +850,9 @@ function renderAlertList(alerts, showResolve = true) {
             ${showResolve && alert.status === "ACTIVE" ? `<button type="button" data-alert-id="${alert.id}" class="resolve-button">Resolve</button>` : ""}
           </div>
         </article>
-      `).join("")}
+      `,
+        )
+        .join("")}
     </div>
   `;
 }
@@ -705,21 +865,27 @@ function renderAlerts() {
         <h2>All Alerts</h2>
         <span class="count-pill">${state.alerts.length} total</span>
       </div>
-      ${renderAlertList(sortedAlerts(), role === 'organiser')}
+      ${renderAlertList(sortedAlerts(), role === "organiser")}
     </section>
   `;
 
   pages.alerts.querySelectorAll(".resolve-button").forEach((button) => {
-    button.addEventListener("click", () => resolveAlert(button.dataset.alertId));
+    button.addEventListener("click", () =>
+      resolveAlert(button.dataset.alertId),
+    );
   });
 }
 
 function renderRoute() {
   const route = (window.location.hash || "#dashboard").slice(1);
 
-  const restricted = role === "viewer" &&
+  const restricted =
+    role === "viewer" &&
     (route === "reports" || route.startsWith("reports/") || route === "alerts");
-  if (restricted) { location.hash = "#dashboard"; return; }
+  if (restricted) {
+    location.hash = "#dashboard";
+    return;
+  }
 
   activatePage(route);
 
@@ -746,7 +912,11 @@ async function loadJson(path, fallback) {
 }
 
 async function loadData() {
-  const dashboard = await loadJson("/api/dashboard", { areas: [], reports: [], activeAlerts: [] });
+  const dashboard = await loadJson("/api/dashboard", {
+    areas: [],
+    reports: [],
+    activeAlerts: [],
+  });
   state.areas = dashboard.areas || [];
   state.reports = dashboard.reports || [];
   state.activeAlerts = dashboard.activeAlerts || [];
