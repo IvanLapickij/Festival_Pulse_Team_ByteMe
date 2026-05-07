@@ -1,100 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Festival Pulse – Steward Dashboard</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    #map { position: relative; width: 800px; height: 600px; background: #2a2a2a; border: 2px solid #444; margin: 0 auto; }
-    .area { position: absolute; background: rgba(100,200,100,0.3); border: 2px solid #6c6; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .area:hover { background: rgba(100,200,100,0.5); transform: scale(1.05); }
-    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-    #modal.show { display: flex; }
-    #modal-content { background: #2a2a2a; padding: 30px; border-radius: 8px; width: 400px; border: 2px solid #444; }
-    #modal-content h2 { margin-bottom: 20px; }
-    label { display: block; margin: 15px 0 5px; }
-    input, select, button { width: 100%; padding: 10px; font-size: 16px; border-radius: 4px; border: 1px solid #555; background: #333; color: #fff; }
-    button { margin-top: 20px; cursor: pointer; background: #6c6; color: #000; font-weight: bold; border: none; }
-    button:hover { background: #8e8; }
-    .close { float: right; cursor: pointer; font-size: 24px; }
-  </style>
-</head>
-<body>
-  <h1>🎪 Festival Pulse – Steward Dashboard</h1>
-  <div id="map">
-    <div class="area" data-id="1" style="top: 50px; left: 50px; width: 300px; height: 200px;">Main Stage</div>
-    <div class="area" data-id="2" style="top: 50px; left: 450px; width: 300px; height: 150px;">Food Village</div>
-    <div class="area" data-id="3" style="top: 280px; left: 50px; width: 200px; height: 250px;">Dance Tent</div>
-    <div class="area" data-id="4" style="top: 280px; left: 350px; width: 200px; height: 150px;">Bar Area</div>
-    <div class="area" data-id="5" style="top: 450px; left: 350px; width: 400px; height: 80px;">Entrance / Exit</div>
-  </div>
-
-  <div id="modal">
-    <div id="modal-content">
-      <span class="close" onclick="closeModal()">×</span>
-      <h2 id="modal-title">Report Crowd Level</h2>
-      <form id="report-form">
-        <input type="hidden" id="area-id">
-        <label>Crowd Level</label>
-        <select id="crowd-level" required>
-          <option value="">-- Select --</option>
-          <option value="LOW">🟢 LOW</option>
-          <option value="MEDIUM">🟡 MEDIUM</option>
-          <option value="FULL">🔴 FULL</option>
-        </select>
-        <label>Your Name (optional)</label>
-        <input type="text" id="steward" placeholder="Steward name">
-        <button type="submit">Submit Report</button>
-      </form>
-    </div>
-  </div>
-
-  <script>
-    const areas = document.querySelectorAll('.area');
-    const modal = document.getElementById('modal');
-    const form = document.getElementById('report-form');
-    const areaIdInput = document.getElementById('area-id');
-    const modalTitle = document.getElementById('modal-title');
-
-    areas.forEach(area => {
-      area.addEventListener('click', () => {
-        const id = area.dataset.id;
-        const name = area.textContent.trim();
-        areaIdInput.value = id;
-        modalTitle.textContent = `Report: ${name}`;
-        modal.classList.add('show');
-      });
-    });
-
-    function closeModal() {
-      modal.classList.remove('show');
-      form.reset();
-    }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const areaId = areaIdInput.value;
-      const crowdLevel = document.getElementById('crowd-level').value;
-      const steward = document.getElementById('steward').value;
-
-      const params = new URLSearchParams({ areaId, crowdLevel });
-      if (steward) params.append('steward', steward);
-
-      const res = await fetch(`/api/reports?${params}`, { method: 'POST' });
-      if (res.ok) {
-        alert('✅ Report submitted!');
-        closeModal();
-      } else {
-        alert('❌ Failed to submit report.');
-      }
-    });
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Festival Pulse</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script type="module" crossorigin src="/assets/index-BITwxEgn.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-9M9hqVq3.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
 </html>
