@@ -1,13 +1,23 @@
-// Coordinate-based area definitions — fictional festival at Hyde Park, London
-const FESTIVAL_CENTRE = [51.5074, -0.1278];
+// Festival centre: Athlone, County Westmeath, Ireland
+const FESTIVAL_CENTRE = [53.4239, -7.9407];
 const AREA_COORDS = [
-  { name: "Main Stage",      lat: 51.5092, lng: -0.1310, icon: "🎤", radius: 60 },
-  { name: "Food Village",    lat: 51.5082, lng: -0.1245, icon: "🍔", radius: 45 },
-  { name: "Dance Tent",      lat: 51.5058, lng: -0.1305, icon: "🎧", radius: 40 },
-  { name: "Bar Area",        lat: 51.5065, lng: -0.1255, icon: "🍺", radius: 35 },
-  { name: "Entrance / Exit", lat: 51.5048, lng: -0.1278, icon: "🚪", radius: 30 }
+  { name: "Main Stage",      lat: 53.4258, lng: -7.9440, type: "stage",    svgIcon: "stage"    },
+  { name: "Food Village",    lat: 53.4248, lng: -7.9375, type: "food",     svgIcon: "food"     },
+  { name: "Dance Tent",      lat: 53.4225, lng: -7.9435, type: "tent",     svgIcon: "tent"     },
+  { name: "Bar Area",        lat: 53.4232, lng: -7.9380, type: "bar",      svgIcon: "bar"      },
+  { name: "Entrance / Exit", lat: 53.4212, lng: -7.9407, type: "entrance", svgIcon: "entrance" }
 ];
 const CROWD_WEIGHTS = { LOW: 0.25, MEDIUM: 0.65, FULL: 1.0 };
+
+// SVG icons for venue pins
+const VENUE_SVGS = {
+  stage:    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 7H3l9-7zm0 2.5L5.5 10h13L12 5.5zM3 11h18v2H3v-2zm2 3h14v7H5v-7zm2 2v3h10v-3H7z"/></svg>`,
+  food:     `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>`,
+  tent:     `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 19h20L12 2zm0 3.5L19.5 19h-15L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>`,
+  bar:      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v2l6.5 9V19H8v2h8v-2h-2.5v-5L20 5V3zm-2.5 2l-2 3h-7l-2-3h11z"/></svg>`,
+  entrance: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1h-3c-.55 0-1 .45-1 1v5h-4V7c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z"/></svg>`,
+  default:  `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>`
+};
 
 // Legacy shape lookup kept for report table icon display
 const areaShapes = [
@@ -175,25 +185,61 @@ function renderDashboard() {
 }
 
 function coordsFor(area) {
-  return AREA_COORDS.find(c => c.name === area.name)
-    || { lat: FESTIVAL_CENTRE[0] + (Math.random()-0.5)*0.01,
-         lng: FESTIVAL_CENTRE[1] + (Math.random()-0.5)*0.01,
-         icon: "📍", radius: 30 };
+  const found = AREA_COORDS.find(c => c.name === area.name);
+  if (found) return found;
+  // Use stored lat/lng if backend has them, else scatter around centre
+  if (area.latitude && area.longitude) return { lat: area.latitude, lng: area.longitude, svgIcon: "default" };
+  return {
+    lat: FESTIVAL_CENTRE[0] + (Math.random()-0.5)*0.008,
+    lng: FESTIVAL_CENTRE[1] + (Math.random()-0.5)*0.008,
+    svgIcon: "default"
+  };
 }
+
+function venueIcon(area, level, hasAlert, draggable) {
+  const c = coordsFor(area);
+  const svg = VENUE_SVGS[c.svgIcon] || VENUE_SVGS.default;
+  const levelCls = `level-${(level||"unknown").toLowerCase()}`;
+  const alertCls = hasAlert ? " has-alert" : "";
+  const dragCls  = draggable ? " draggable-pin" : "";
+  return L.divIcon({
+    className: "",
+    html: `<div class="venue-pin ${levelCls}${alertCls}${dragCls}">
+             <div class="venue-icon">${svg}</div>
+             <div class="venue-pulse"></div>
+           </div>
+           <div class="venue-label">
+             <strong>${area.name}</strong>
+             <span>${level || "—"}</span>
+           </div>`,
+    iconSize:   [56, 72],
+    iconAnchor: [28, 64],
+    popupAnchor:[0, -64]
+  });
+}
+
 
 function buildHeatPoints(areas) {
   const pts = [];
   for (const area of areas) {
     const c = coordsFor(area);
     const w = CROWD_WEIGHTS[area.currentCrowdLevel] || 0.1;
+    const spread = area.currentCrowdLevel === "FULL" ? 0.0007 :
+                   area.currentCrowdLevel === "MEDIUM" ? 0.00045 : 0.00025;
+    const count  = area.currentCrowdLevel === "FULL" ? 18 :
+                   area.currentCrowdLevel === "MEDIUM" ? 10 : 5;
     pts.push([c.lat, c.lng, w]);
-    const jitter = area.currentCrowdLevel === "FULL" ? 8 : area.currentCrowdLevel === "MEDIUM" ? 5 : 2;
-    for (let i = 0; i < jitter; i++) {
-      pts.push([c.lat + (Math.random()-0.5)*0.0018, c.lng + (Math.random()-0.5)*0.0018, w * 0.6]);
+    for (let i = 0; i < count; i++) {
+      pts.push([
+        c.lat + (Math.random()-0.5)*spread,
+        c.lng + (Math.random()-0.5)*spread,
+        w * (0.55 + Math.random()*0.35)
+      ]);
     }
   }
   return pts;
 }
+
 
 function levelColour(level) {
   return level === "FULL" ? "#ef4444" : level === "MEDIUM" ? "#f59e0b" : "#22c55e";
@@ -204,6 +250,7 @@ let _orgMap = null;
 function renderAreas() {
   setHeading("Live Map", "Festival Areas");
   let editMode = false;
+  const editMarkers = {}; // areaId -> L.marker (for dragend)
 
   pages.areas.innerHTML = `
     <div class="org-map-shell">
@@ -238,6 +285,8 @@ function renderAreas() {
     btn.textContent = editMode ? "✕ Exit Edit" : "✏ Edit Map";
     btn.style.background = editMode ? "#ef4444" : "";
     btn.style.color = editMode ? "#fff" : "";
+    // Rebuild markers with draggable state
+    buildMarkers(editMode);
     showEditPanel(editMode);
   });
 
@@ -246,7 +295,8 @@ function renderAreas() {
     if (!show) { panel.hidden = true; return; }
     panel.hidden = false;
     document.getElementById("detail-content").innerHTML = `
-      <div class="detail-area-name" style="margin-bottom:14px">Manage Areas</div>
+      <div class="detail-area-name" style="margin-bottom:10px">Edit Areas</div>
+      <p style="font-size:11px;color:#64748b;margin-bottom:14px">Drag markers on the map to reposition. Use the form below to add or rename areas.</p>
 
       <div style="margin-bottom:16px">
         <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Add New Area</div>
@@ -261,7 +311,6 @@ function renderAreas() {
         <div id="area-edit-list"></div>
       </div>
     `;
-
     renderAreaEditList();
 
     document.getElementById("add-area-btn").addEventListener("click", async () => {
@@ -269,18 +318,14 @@ function renderAreas() {
       const msg  = document.getElementById("add-area-msg");
       if (!name) { msg.textContent = "Name is required."; return; }
       const res = await fetch("/api/areas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name })
       });
       if (res.ok) {
         document.getElementById("new-area-name").value = "";
         msg.textContent = "✓ Area added.";
-        await loadData();
-        renderAreaEditList();
-      } else {
-        msg.textContent = "Failed to add area.";
-      }
+        await loadData(); renderAreaEditList(); buildMarkers(editMode);
+      } else { msg.textContent = "Failed to add area."; }
     });
   }
 
@@ -304,11 +349,10 @@ function renderAreas() {
         const name = row.querySelector(".edit-area-input").value.trim();
         if (!name) return;
         const res = await fetch(`/api/areas/${btn.dataset.id}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          method: "PUT", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name })
         });
-        if (res.ok) { await loadData(); renderAreaEditList(); }
+        if (res.ok) { await loadData(); renderAreaEditList(); buildMarkers(editMode); }
       });
     });
 
@@ -316,78 +360,114 @@ function renderAreas() {
       btn.addEventListener("click", async () => {
         if (!confirm("Delete this area?")) return;
         const res = await fetch(`/api/areas/${btn.dataset.id}`, { method: "DELETE" });
-        if (res.ok) { await loadData(); renderAreaEditList(); }
+        if (res.ok) { await loadData(); renderAreaEditList(); buildMarkers(editMode); }
       });
     });
   }
 
+  // ── Map init ──────────────────────────────────────────────────────────────
   if (_orgMap) { _orgMap.remove(); _orgMap = null; }
 
   _orgMap = L.map("festival-map-root", {
-    center: FESTIVAL_CENTRE, zoom: 15, zoomControl: true, attributionControl: false
+    center: FESTIVAL_CENTRE,
+    zoom: 16,
+    minZoom: 14,
+    maxZoom: 20,
+    dragging: true,
+    touchZoom: true,
+    scrollWheelZoom: true,
+    doubleClickZoom: true,
+    boxZoom: true,
+    keyboard: true,
+    zoomControl: true,
+    attributionControl: false
   });
 
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(_orgMap);
+  // Soft bounds — allow generous padding so map doesn't feel locked
+  const festivalBounds = L.latLngBounds(
+    [FESTIVAL_CENTRE[0] - 0.015, FESTIVAL_CENTRE[1] - 0.020],
+    [FESTIVAL_CENTRE[0] + 0.015, FESTIVAL_CENTRE[1] + 0.020]
+  );
+  _orgMap.setMaxBounds(festivalBounds.pad(0.5));
 
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 20 }).addTo(_orgMap);
+
+  // Festival boundary ring
   L.circle(FESTIVAL_CENTRE, {
-    radius: 400, color: "#2dd4bf", weight: 2, dashArray: "8 6",
+    radius: 350, color: "#2dd4bf", weight: 2, dashArray: "8 6",
     fillColor: "#2dd4bf", fillOpacity: 0.04
   }).addTo(_orgMap);
 
-  L.heatLayer(buildHeatPoints(state.areas), {
-    radius: 55, blur: 40, maxZoom: 17,
-    gradient: { 0.0: "#1a3a2a", 0.3: "#22c55e", 0.6: "#f59e0b", 0.85: "#ef4444", 1.0: "#fff" }
+  // Heatmap layer
+  const heatLayer = L.heatLayer(buildHeatPoints(state.areas), {
+    radius: 42, blur: 34, maxZoom: 19, max: 1.0,
+    gradient: { 0.20: "#22c55e", 0.45: "#facc15", 0.70: "#f97316", 1.00: "#ef4444" }
   }).addTo(_orgMap);
 
-  state.areas.forEach(area => {
-    const c = coordsFor(area);
-    const level = area.currentCrowdLevel || "UNKNOWN";
-    const hasAlert = state.activeAlerts.some(a => a.area?.id === area.id);
+  // Marker layer group
+  const markerGroup = L.layerGroup().addTo(_orgMap);
 
-    if (level === "FULL") {
-      L.circleMarker([c.lat, c.lng], {
-        radius: 28, color: "#ef4444", weight: 2, fillOpacity: 0, className: "hotspot-pulse"
-      }).addTo(_orgMap);
-    }
-    if (hasAlert) {
-      L.circleMarker([c.lat, c.lng], {
-        radius: 36, color: "#ef4444", weight: 2, fillOpacity: 0, className: "alert-ring"
-      }).addTo(_orgMap);
-    }
+  function buildMarkers(isDraggable) {
+    markerGroup.clearLayers();
+    Object.keys(editMarkers).forEach(k => delete editMarkers[k]);
 
-    const marker = L.marker([c.lat, c.lng], {
-      icon: L.divIcon({
-        className: "",
-        html: `<div class="area-marker level-${level.toLowerCase()}${hasAlert ? " has-alert" : ""}">
-                 <span class="marker-icon">${c.icon}</span>
-                 <span class="marker-name">${area.name}</span>
-                 <span class="marker-level">${level}</span>
-               </div>`,
-        iconAnchor: [60, 20]
-      })
-    }).addTo(_orgMap);
+    state.areas.forEach(area => {
+      const c = coordsFor(area);
+      const level = area.currentCrowdLevel || "UNKNOWN";
+      const hasAlert = state.activeAlerts.some(a => a.area?.id === area.id);
 
-    marker.on("click", () => {
-      if (editMode) return; // in edit mode, panel is already showing the edit list
-      const alert = state.activeAlerts.find(a => a.area?.id === area.id);
-      document.getElementById("detail-content").innerHTML = `
-        <div class="detail-area-name">${escapeHtml(area.name)}</div>
-        <div class="detail-level-badge ${levelClass(level)}">${level}</div>
-        ${alert ? `<div class="detail-alert-box">
-          <strong>⚠ Active Alert</strong>
-          <p>${escapeHtml(alert.message)}</p>
-          <button class="resolve-button" data-alert-id="${alert.id}">Resolve Alert</button>
-        </div>` : "<p class='detail-no-alert'>No active alert</p>"}
-        <p class="detail-coords">📍 ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</p>
-      `;
-      const panel = document.getElementById("area-detail-panel");
-      panel.hidden = false;
-      panel.querySelector(".resolve-button")?.addEventListener("click", async e => {
-        await resolveAlert(e.target.dataset.alertId);
-        panel.hidden = true;
-      });
+      // Alert ring
+      if (hasAlert) {
+        L.circleMarker([c.lat, c.lng], {
+          radius: 38, color: "#ef4444", weight: 2, fillOpacity: 0, className: "alert-ring"
+        }).addTo(markerGroup);
+      }
+
+      const marker = L.marker([c.lat, c.lng], {
+        icon: venueIcon(area, level, hasAlert, isDraggable),
+        draggable: isDraggable
+      }).addTo(markerGroup);
+
+      if (isDraggable) {
+        editMarkers[area.id] = marker;
+        marker.on("dragend", async () => {
+          const pos = marker.getLatLng();
+          // Persist to backend
+          await fetch(`/api/areas/${area.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: area.name, latitude: pos.lat, longitude: pos.lng })
+          });
+          // Update local AREA_COORDS so heatmap refreshes correctly
+          const coord = AREA_COORDS.find(c => c.name === area.name);
+          if (coord) { coord.lat = pos.lat; coord.lng = pos.lng; }
+          heatLayer.setLatLngs(buildHeatPoints(state.areas));
+        });
+      } else {
+        marker.on("click", () => {
+          const alert = state.activeAlerts.find(a => a.area?.id === area.id);
+          document.getElementById("detail-content").innerHTML = `
+            <div class="detail-area-name">${escapeHtml(area.name)}</div>
+            <div class="detail-level-badge ${levelClass(level)}">${level}</div>
+            ${alert ? `<div class="detail-alert-box">
+              <strong>⚠ Active Alert</strong>
+              <p>${escapeHtml(alert.message)}</p>
+              <button class="resolve-button" data-alert-id="${alert.id}">Resolve Alert</button>
+            </div>` : "<p class='detail-no-alert'>No active alert</p>"}
+            <p class="detail-coords">📍 ${c.lat.toFixed(4)}, ${c.lng.toFixed(4)}</p>
+          `;
+          const panel = document.getElementById("area-detail-panel");
+          panel.hidden = false;
+          panel.querySelector(".resolve-button")?.addEventListener("click", async e => {
+            await resolveAlert(e.target.dataset.alertId);
+            panel.hidden = true;
+          });
+        });
+      }
     });
-  });
+  }
+
+  buildMarkers(false);
 }
 
 

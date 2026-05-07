@@ -719,52 +719,136 @@ dd {
 /* Leaflet tile layer dark override */
 .leaflet-tile-pane { filter: brightness(0.85) saturate(0.7); }
 
-/* Area markers */
-.area-marker {
+/* ── Snapchat-style venue pins ───────────────────────────────────────────── */
+.venue-pin {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
   display: flex;
-  flex-direction: column;
   align-items: center;
-  background: rgba(17,24,39,0.92);
-  border: 2px solid #374151;
-  border-radius: 10px;
-  padding: 6px 10px;
-  min-width: 120px;
-  backdrop-filter: blur(6px);
-  cursor: pointer;
-  transition: transform 0.15s;
+  justify-content: center;
   box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  transition: transform 0.15s, box-shadow 0.15s;
+  cursor: pointer;
 }
 
-.area-marker:hover { transform: translateY(-2px); }
+.venue-pin:hover {
+  transform: rotate(-45deg) scale(1.12);
+  box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+}
 
-.area-marker.level-low    { border-color: #22c55e; }
-.area-marker.level-medium { border-color: #f59e0b; }
-.area-marker.level-full   { border-color: #ef4444; box-shadow: 0 0 18px rgba(239,68,68,0.4); }
-.area-marker.has-alert    { border-color: #ef4444; }
+.venue-pin.level-low    { background: #16a34a; border: 2px solid #4ade80; }
+.venue-pin.level-medium { background: #b45309; border: 2px solid #fcd34d; }
+.venue-pin.level-full   { background: #b91c1c; border: 2px solid #f87171; }
+.venue-pin.level-unknown { background: #334155; border: 2px solid #64748b; }
 
-.marker-icon  { font-size: 20px; line-height: 1; }
-.marker-name  { font-size: 12px; font-weight: 800; color: #f1f5f9; margin-top: 3px; text-align: center; white-space: nowrap; }
-.marker-level { font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-top: 2px; }
+.venue-icon {
+  transform: rotate(45deg);
+  width: 26px;
+  height: 26px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-.area-marker.level-low    .marker-level { color: #4ade80; }
-.area-marker.level-medium .marker-level { color: #fcd34d; }
-.area-marker.level-full   .marker-level { color: #f87171; }
-.area-marker.level-unknown .marker-level { color: #94a3b8; }
+.venue-icon svg {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+}
 
+.venue-label {
+  position: absolute;
+  top: 54px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15,23,42,0.92);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 3px 8px;
+  white-space: nowrap;
+  text-align: center;
+  pointer-events: none;
+}
+
+.venue-label strong {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #f1f5f9;
+}
+
+.venue-label span {
+  display: block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.venue-pin.level-full .venue-label span { color: #f87171; }
+.venue-pin.level-medium .venue-label span { color: #fcd34d; }
+.venue-pin.level-low .venue-label span { color: #4ade80; }
+
+/* FULL pulse ring */
+.venue-pin.level-full::after {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  border: 2px solid rgba(239,68,68,0.8);
+  animation: alertPulse 1.8s ease-out infinite;
+}
+
+/* Alert ring on has-alert pins */
+.venue-pin.has-alert::before {
+  content: "⚠";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  transform: rotate(45deg);
+  font-size: 12px;
+  background: #ef4444;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-style: normal;
+}
+
+/* Draggable indicator */
+.venue-pin.draggable-pin {
+  cursor: grab;
+  border-style: dashed;
+}
+
+.venue-pin.draggable-pin:active { cursor: grabbing; }
 /* Pulse animations */
-@keyframes hotspot-pulse {
-  0%   { stroke-opacity: 0.9; stroke-width: 2; }
-  50%  { stroke-opacity: 0.2; stroke-width: 6; }
-  100% { stroke-opacity: 0.9; stroke-width: 2; }
+@keyframes alertPulse {
+  0%   { transform: scale(0.75); opacity: 0.85; }
+  100% { transform: scale(2.0);  opacity: 0; }
 }
 
 @keyframes alert-ring-expand {
-  0%   { stroke-opacity: 0.8; r: 36; }
-  100% { stroke-opacity: 0;   r: 56; }
+  0%   { stroke-opacity: 0.8; }
+  100% { stroke-opacity: 0; }
 }
 
-.hotspot-pulse { animation: hotspot-pulse 1.8s ease-in-out infinite; }
-.alert-ring    { animation: alert-ring-expand 1.8s ease-out infinite; }
+.alert-ring { animation: alert-ring-expand 1.8s ease-out infinite; }
+
+@keyframes liveBreath {
+  0%, 100% { opacity: 0.45; transform: scale(0.9); }
+  50%       { opacity: 1;    transform: scale(1.15); }
+}
+
+.live-dot { animation: liveBreath 1.6s ease-in-out infinite; }
 
 /* Area detail side panel */
 .area-detail-panel {
