@@ -326,25 +326,79 @@ function renderAreas() {
     const panel = document.getElementById("area-detail-panel");
     if (!show) { panel.hidden = true; return; }
     panel.hidden = false;
+
+    const FIELD = "width:100%;background:#0d1117;border:1px solid #1e293b;border-radius:6px;color:#e2e8f0;font-size:13px;padding:8px 10px";
+    const LABEL = "font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px";
+
     document.getElementById("detail-content").innerHTML = `
-      <div class="detail-area-name" style="margin-bottom:10px">Edit Areas</div>
-      <p style="font-size:11px;color:#64748b;margin-bottom:14px">Drag markers on the map to reposition. Use the form below to add or rename areas.</p>
+      <div class="detail-area-name" style="margin-bottom:14px">Edit Map</div>
 
       <div style="margin-bottom:16px">
-        <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Add New Area</div>
+        <div style="${LABEL}">Festival Centre (Eircode)</div>
+        <div style="display:flex;gap:6px;margin-bottom:6px">
+          <input id="eircode-input" type="text" placeholder="e.g. N37 HD52"
+            style="${FIELD};flex:1;padding:8px 10px">
+          <button id="eircode-btn"
+            style="background:#2563eb;color:#fff;border:0;border-radius:6px;padding:0 12px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap">
+            Set Location
+          </button>
+        </div>
+        <p id="eircode-msg" style="font-size:12px;min-height:16px;color:#64748b"></p>
+      </div>
+
+      <div style="margin-bottom:20px">
+        <div style="${LABEL};display:flex;justify-content:space-between">
+          <span>Boundary Radius</span><span id="radius-val">${boundaryRadius}m</span>
+        </div>
+        <input id="radius-slider" type="range" min="100" max="2000" step="50"
+          value="${boundaryRadius}"
+          style="width:100%;accent-color:#2563eb;cursor:pointer">
+      </div>
+
+      <div style="border-top:1px solid #1e293b;padding-top:16px;margin-bottom:16px">
+        <div style="${LABEL}">Add New Area</div>
         <input id="new-area-name" type="text" placeholder="Area name"
-          style="width:100%;background:#0d1117;border:1px solid #1e293b;border-radius:6px;color:#e2e8f0;font-size:13px;padding:8px 10px;margin-bottom:8px">
-        <button id="add-area-btn" class="resolve-button" style="width:100%;background:#2dd4bf;color:#042f2e">+ Add Area</button>
+          style="${FIELD};display:block;margin-bottom:8px">
+        <button id="add-area-btn" class="resolve-button" style="width:100%">+ Add Area</button>
         <p id="add-area-msg" style="font-size:12px;margin-top:6px;min-height:16px;color:#64748b"></p>
       </div>
 
       <div>
-        <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Existing Areas</div>
+        <div style="${LABEL}">Existing Areas</div>
         <div id="area-edit-list"></div>
       </div>
     `;
     renderAreaEditList();
 
+    // Radius slider
+    document.getElementById("radius-slider").addEventListener("input", e => {
+      boundaryRadius = parseInt(e.target.value);
+      document.getElementById("radius-val").textContent = boundaryRadius + "m";
+      boundaryCircle.setRadius(boundaryRadius);
+    });
+
+    // Eircode geocoding
+    document.getElementById("eircode-btn").addEventListener("click", async () => {
+      const eircode = document.getElementById("eircode-input").value.trim();
+      const msg = document.getElementById("eircode-msg");
+      if (!eircode) { msg.textContent = "Enter an Eircode first."; return; }
+      msg.textContent = "Searching…";
+      try {
+        const url = "https://nominatim.openstreetmap.org/search?" +
+          "q=" + encodeURIComponent(eircode + " Ireland") +
+          "&countrycodes=ie&format=json&limit=1";
+        const data = await fetch(url).then(r => r.json());
+        if (!data.length) { msg.textContent = "Eircode not found. Try routing key only (e.g. N37)."; return; }
+        mapCentre = [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+        boundaryCircle.setLatLng(mapCentre);
+        _orgMap.flyTo(mapCentre, 16, { duration: 1.2 });
+        msg.textContent = "✓ " + data[0].display_name.split(",")[0];
+      } catch {
+        msg.textContent = "Geocoding failed — check connection.";
+      }
+    });
+
+    // Add area
     document.getElementById("add-area-btn").addEventListener("click", async () => {
       const name = document.getElementById("new-area-name").value.trim();
       const msg  = document.getElementById("add-area-msg");
@@ -413,19 +467,14 @@ function renderAreas() {
     attributionControl: false
   });
 
-  // Soft bounds — allow generous padding so map doesn't feel locked
-  const festivalBounds = L.latLngBounds(
-    [FESTIVAL_CENTRE[0] - 0.015, FESTIVAL_CENTRE[1] - 0.020],
-    [FESTIVAL_CENTRE[0] + 0.015, FESTIVAL_CENTRE[1] + 0.020]
-  );
-  _orgMap.setMaxBounds(festivalBounds.pad(0.5));
-
   L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 20 }).addTo(_orgMap);
 
-  // Festival boundary ring
-  L.circle(FESTIVAL_CENTRE, {
-    radius: 350, color: "#2dd4bf", weight: 2, dashArray: "8 6",
-    fillColor: "#2dd4bf", fillOpacity: 0.04
+  // Mutable festival boundary ring
+  let mapCentre = [...FESTIVAL_CENTRE];
+  let boundaryRadius = 350;
+  let boundaryCircle = L.circle(mapCentre, {
+    radius: boundaryRadius, color: "#2563eb", weight: 2, dashArray: "8 6",
+    fillColor: "#2563eb", fillOpacity: 0.05
   }).addTo(_orgMap);
 
   // Heatmap layer
@@ -655,6 +704,11 @@ function renderAlerts() {
 
 function renderRoute() {
   const route = (window.location.hash || "#dashboard").slice(1);
+
+  const restricted = role === "viewer" &&
+    (route === "reports" || route.startsWith("reports/") || route === "alerts");
+  if (restricted) { location.hash = "#dashboard"; return; }
+
   activatePage(route);
 
   if (route === "areas") {
