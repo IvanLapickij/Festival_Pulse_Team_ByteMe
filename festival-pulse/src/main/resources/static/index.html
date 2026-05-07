@@ -9,12 +9,18 @@
 <body class="landing-body">
 
   <div class="landing-hero">
-    <div class="landing-hero-overlay"></div>
     <div class="landing-hero-content">
       <div class="landing-pulse-icon">
-        <svg width="52" height="32" viewBox="0 0 52 32" fill="none" aria-hidden="true">
-          <polyline points="0,16 8,16 13,4 20,28 27,8 33,24 38,16 52,16"
-                    stroke="#f97316" stroke-width="3" fill="none"
+        <svg width="60" height="36" viewBox="0 0 60 36" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="pulseGrad" x1="0" y1="0" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#f97316"/>
+              <stop offset="60%"  stop-color="#ec4899"/>
+              <stop offset="100%" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+          <polyline points="0,18 10,18 16,4 24,32 31,8 38,26 44,18 60,18"
+                    stroke="url(#pulseGrad)" stroke-width="3.5" fill="none"
                     stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
@@ -29,9 +35,9 @@
 
     <div class="role-grid">
 
-      <article class="role-card">
+      <article class="role-card role-card-organiser">
         <div class="role-icon role-icon-organiser">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
             <circle cx="12" cy="7" r="4"/>
@@ -55,9 +61,9 @@
         </button>
       </article>
 
-      <article class="role-card">
+      <article class="role-card role-card-steward">
         <div class="role-icon role-icon-steward">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
             <rect x="9" y="3" width="6" height="4" rx="2"/>
@@ -83,9 +89,9 @@
         </button>
       </article>
 
-      <article class="role-card">
+      <article class="role-card role-card-viewer">
         <div class="role-icon role-icon-viewer">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
