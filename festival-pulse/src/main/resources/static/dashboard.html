@@ -7,55 +7,53 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>Festival Pulse</h1>
-      <p>Live crowd reports and active area alerts</p>
-    </div>
-    <button id="refresh-button" type="button">Refresh</button>
-  </header>
-
-  <main class="layout">
-    <section class="map-panel" aria-label="Festival map">
-      <svg id="festival-map" viewBox="0 0 900 560" role="img" aria-labelledby="map-title">
-        <title id="map-title">Festival area crowd map</title>
-        <rect class="map-background" x="0" y="0" width="900" height="560"></rect>
-        <path class="path" d="M80 460 C220 360, 330 410, 470 300 S700 220, 815 100"></path>
-        <g id="map-areas"></g>
-      </svg>
-    </section>
-
-    <aside class="side-panel">
-      <section class="panel">
-        <h2>Submit Report</h2>
-        <form id="report-form">
-          <label for="area-select">Area</label>
-          <select id="area-select" required></select>
-
-          <label for="crowd-level">Crowd level</label>
-          <select id="crowd-level" required>
-            <option value="LOW">LOW</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="FULL">FULL</option>
-          </select>
-
-          <label for="steward">Steward</label>
-          <input id="steward" type="text" maxlength="100" placeholder="Optional">
-
-          <button type="submit">Submit Report</button>
-        </form>
-        <p id="form-message" class="message" aria-live="polite"></p>
-      </section>
-
-      <section class="panel">
-        <div class="panel-heading">
-          <h2>Active Alerts</h2>
-          <span id="alert-count">0</span>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="Main navigation">
+      <div class="brand">
+        <img src="ByteMe.png" alt="" class="brand-mark" aria-hidden="true">
+        <div>
+          <strong>Festival Pulse</strong>
+          <span>Live Operations</span>
         </div>
-        <ul id="alerts-list" class="alerts-list"></ul>
-      </section>
+      </div>
+
+      <nav class="nav-list">
+        <a class="nav-link" href="#dashboard" data-route="dashboard">Dashboard</a>
+        <a class="nav-link" href="#areas" data-route="areas">Areas</a>
+        <a class="nav-link" href="#reports" data-route="reports">Reports</a>
+        <a class="nav-link" href="#alerts" data-route="alerts">Alerts</a>
+      </nav>
     </aside>
-  </main>
+
+    <main class="content">
+      <div class="page-heading">
+        <div>
+          <p id="page-kicker" class="kicker">Overview</p>
+          <h1 id="page-title">Festival Pulse Dashboard</h1>
+        </div>
+        <button id="refresh-button" class="secondary-button" type="button">Refresh</button>
+      </div>
+
+      <section id="dashboard-page" class="page-view"></section>
+      <section id="areas-page" class="page-view" hidden></section>
+      <section id="reports-page" class="page-view" hidden></section>
+      <section id="report-detail-page" class="page-view" hidden></section>
+      <section id="alerts-page" class="page-view" hidden></section>
+    </main>
+  </div>
+
+  <template id="festival-map-template">
+    <svg id="festival-map" viewBox="0 0 920 580" role="img" aria-labelledby="map-title">
+      <title id="map-title">Festival area crowd map</title>
+      <rect class="map-grass" x="0" y="0" width="920" height="580"></rect>
+      <path class="map-route route-main" d="M86 492 C204 360, 318 402, 438 318 S654 268, 818 108"></path>
+      <path class="map-route route-side" d="M136 162 C264 190, 346 154, 470 208 S650 312, 806 382"></path>
+      <circle class="map-node" cx="82" cy="492" r="12"></circle>
+      <circle class="map-node" cx="818" cy="108" r="12"></circle>
+      <circle class="map-node" cx="806" cy="382" r="12"></circle>
+      <g id="map-areas"></g>
+    </svg>
+  </template>
 
   <script src="app.js"></script>
 </body>
