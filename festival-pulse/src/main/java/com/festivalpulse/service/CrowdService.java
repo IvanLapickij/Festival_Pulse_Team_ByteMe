@@ -1,5 +1,6 @@
 package com.festivalpulse.service;
 
+import com.festivalpulse.kafka.ReportEvent;
 import com.festivalpulse.model.AlertStatus;
 import com.festivalpulse.model.CrowdAlert;
 import com.festivalpulse.model.CrowdLevel;
@@ -8,6 +9,7 @@ import com.festivalpulse.model.FestivalArea;
 import com.festivalpulse.repository.AlertRepository;
 import com.festivalpulse.repository.AreaRepository;
 import com.festivalpulse.repository.ReportRepository;
+import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,19 +22,19 @@ public class CrowdService {
     private final AreaRepository areaRepository;
     private final ReportRepository reportRepository;
     private final AlertRepository alertRepository;
+    private final KafkaOperations<String, ReportEvent> kafkaOperations;
 
-    public CrowdService(
-            AreaRepository areaRepository,
-            ReportRepository reportRepository,
-            AlertRepository alertRepository
-    ) {
+    public CrowdService(AreaRepository areaRepository, ReportRepository reportRepository,
+                        AlertRepository alertRepository,
+                        KafkaOperations<String, ReportEvent> kafkaOperations) {
         this.areaRepository = areaRepository;
         this.reportRepository = reportRepository;
         this.alertRepository = alertRepository;
+        this.kafkaOperations = kafkaOperations;
     }
 
     @Transactional
-    public CrowdReport submitReport(Long areaId, CrowdLevel level, String steward) {
+    public CrowdReport submitReport(Long areaId, CrowdLevel level, String steward, String note) {
         FestivalArea area = areaRepository.findById(areaId)
                 .orElseThrow(() -> new IllegalArgumentException("Area not found: " + areaId));
 
@@ -42,12 +44,11 @@ public class CrowdService {
         report.setArea(area);
         report.setCrowdLevel(level);
         report.setSteward(steward);
+        report.setNote(note);
         reportRepository.save(report);
 
-        if (level == CrowdLevel.FULL) {
-            alertRepository.findByAreaIdAndStatus(area.getId(), AlertStatus.ACTIVE)
-                    .orElseGet(() -> createFullAlert(area));
-        }
+        kafkaOperations.send("festival.reports", String.valueOf(areaId),
+                new ReportEvent(areaId, area.getName(), level));
 
         return report;
     }
@@ -63,12 +64,5 @@ public class CrowdService {
         alert.setStatus(AlertStatus.RESOLVED);
         alert.setResolvedAt(LocalDateTime.now());
         return alert;
-    }
-
-    private CrowdAlert createFullAlert(FestivalArea area) {
-        CrowdAlert alert = new CrowdAlert();
-        alert.setArea(area);
-        alert.setMessage(area.getName() + " is FULL - immediate attention required.");
-        return alertRepository.save(alert);
     }
 }

@@ -1,24 +1,30 @@
-CREATE TABLE IF NOT EXISTS festival_area (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL UNIQUE,
-    current_crowd_level VARCHAR(10) NOT NULL DEFAULT 'LOW'
-);
+CREATE TABLE
+    IF NOT EXISTS festival_area (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100) NOT NULL UNIQUE,
+        current_crowd_level VARCHAR(10) NOT NULL DEFAULT 'LOW',
+        latitude DOUBLE,
+        longitude DOUBLE
+    );
 
-CREATE TABLE IF NOT EXISTS crowd_report (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    area_id BIGINT NOT NULL,
-    crowd_level VARCHAR(10) NOT NULL,
-    steward VARCHAR(100),
-    reported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_crowd_report_area FOREIGN KEY (area_id) REFERENCES festival_area(id)
-);
+CREATE TABLE
+    IF NOT EXISTS crowd_report (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        area_id BIGINT NOT NULL,
+        crowd_level VARCHAR(10) NOT NULL,
+        steward VARCHAR(100),
+        note VARCHAR(500),
+        reported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT fk_crowd_report_area FOREIGN KEY (area_id) REFERENCES festival_area (id)
+    );
 
-CREATE TABLE IF NOT EXISTS crowd_alert (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    area_id BIGINT NOT NULL,
-    message VARCHAR(255) NOT NULL,
-    status VARCHAR(10) NOT NULL DEFAULT 'ACTIVE',
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    resolved_at TIMESTAMP,
-    CONSTRAINT fk_crowd_alert_area FOREIGN KEY (area_id) REFERENCES festival_area(id)
-);
+CREATE TABLE
+    IF NOT EXISTS crowd_alert (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        area_id BIGINT NOT NULL,
+        message VARCHAR(255) NOT NULL,
+        status VARCHAR(10) NOT NULL DEFAULT 'ACTIVE',
+        created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        resolved_at TIMESTAMP,
+        CONSTRAINT fk_crowd_alert_area FOREIGN KEY (area_id) REFERENCES festival_area (id)
+    );

@@ -5,6 +5,7 @@ import com.festivalpulse.model.FestivalArea;
 import com.festivalpulse.repository.AreaRepository;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,21 @@ public class AreaController {
         return areaRepository.save(area);
     }
 
-    public record AreaRequest(@NotBlank String name, CrowdLevel currentCrowdLevel) {
+    @PutMapping("/{id}")
+    public ResponseEntity<FestivalArea> update(@PathVariable Long id, @Valid @RequestBody AreaRequest request) {
+        return areaRepository.findById(id).map(area -> {
+            area.setName(request.name());
+            if (request.currentCrowdLevel() != null) area.setCurrentCrowdLevel(request.currentCrowdLevel());
+            return ResponseEntity.ok(areaRepository.save(area));
+        }).orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        if (!areaRepository.existsById(id)) return ResponseEntity.notFound().build();
+        areaRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    public record AreaRequest(@NotBlank String name, CrowdLevel currentCrowdLevel) {}
 }

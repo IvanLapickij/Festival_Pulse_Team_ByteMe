@@ -10,11 +10,11 @@ spring:
 
   h2:
     console:
-      enabled: true   # http://localhost:8080/h2-console
+      enabled: true
 
   jpa:
     hibernate:
-      ddl-auto: none  # schema.sql drives DDL
+      ddl-auto: none
     show-sql: false
 
   sql:
@@ -26,6 +26,8 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        max.block.ms: 3000          # fail fast if broker is down
     consumer:
       group-id: festival-pulse
       auto-offset-reset: earliest
@@ -34,7 +36,5 @@ spring:
       properties:
         spring.json.trusted.packages: "com.festivalpulse.*"
         spring.json.value.default.type: "com.festivalpulse.kafka.ReportEvent"
-
-festival:
-  crowd:
-    alert-threshold: 80   # % capacity that triggers an alert
+    listener:
+      missing-topics-fatal: false

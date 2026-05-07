@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-FestivalPulseApplication<festival-pulse>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.festivalpulse.FestivalPulseApplication",
+            "projectName": "festival-pulse",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

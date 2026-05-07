@@ -3,98 +3,128 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Festival Pulse – Steward Dashboard</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
-    h1 { margin-bottom: 20px; }
-    #map { position: relative; width: 800px; height: 600px; background: #2a2a2a; border: 2px solid #444; margin: 0 auto; }
-    .area { position: absolute; background: rgba(100,200,100,0.3); border: 2px solid #6c6; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; font-weight: bold; }
-    .area:hover { background: rgba(100,200,100,0.5); transform: scale(1.05); }
-    #modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
-    #modal.show { display: flex; }
-    #modal-content { background: #2a2a2a; padding: 30px; border-radius: 8px; width: 400px; border: 2px solid #444; }
-    #modal-content h2 { margin-bottom: 20px; }
-    label { display: block; margin: 15px 0 5px; }
-    input, select, button { width: 100%; padding: 10px; font-size: 16px; border-radius: 4px; border: 1px solid #555; background: #333; color: #fff; }
-    button { margin-top: 20px; cursor: pointer; background: #6c6; color: #000; font-weight: bold; border: none; }
-    button:hover { background: #8e8; }
-    .close { float: right; cursor: pointer; font-size: 24px; }
-  </style>
+  <title>Festival Pulse – Welcome</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <h1>🎪 Festival Pulse – Steward Dashboard</h1>
-  <div id="map">
-    <div class="area" data-id="1" style="top: 50px; left: 50px; width: 300px; height: 200px;">Main Stage</div>
-    <div class="area" data-id="2" style="top: 50px; left: 450px; width: 300px; height: 150px;">Food Village</div>
-    <div class="area" data-id="3" style="top: 280px; left: 50px; width: 200px; height: 250px;">Dance Tent</div>
-    <div class="area" data-id="4" style="top: 280px; left: 350px; width: 200px; height: 150px;">Bar Area</div>
-    <div class="area" data-id="5" style="top: 450px; left: 350px; width: 400px; height: 80px;">Entrance / Exit</div>
+<body class="landing-body">
+
+  <div class="landing-hero">
+    <div class="landing-hero-content">
+      <div class="landing-pulse-icon">
+        <svg width="60" height="36" viewBox="0 0 60 36" fill="none" aria-hidden="true">
+          <defs>
+            <linearGradient id="pulseGrad" x1="0" y1="0" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+              <stop offset="0%"   stop-color="#f97316"/>
+              <stop offset="60%"  stop-color="#ec4899"/>
+              <stop offset="100%" stop-color="#a855f7"/>
+            </linearGradient>
+          </defs>
+          <polyline points="0,18 10,18 16,4 24,32 31,8 38,26 44,18 60,18"
+                    stroke="url(#pulseGrad)" stroke-width="3.5" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="landing-title">Festival Pulse</h1>
+      <p class="landing-tagline">Real-time crowd insights. Safer festivals.</p>
+    </div>
   </div>
 
-  <div id="modal">
-    <div id="modal-content">
-      <span class="close" onclick="closeModal()">×</span>
-      <h2 id="modal-title">Report Crowd Level</h2>
-      <form id="report-form">
-        <input type="hidden" id="area-id">
-        <label>Crowd Level</label>
-        <select id="crowd-level" required>
-          <option value="">-- Select --</option>
-          <option value="LOW">🟢 LOW</option>
-          <option value="MEDIUM">🟡 MEDIUM</option>
-          <option value="FULL">🔴 FULL</option>
-        </select>
-        <label>Your Name (optional)</label>
-        <input type="text" id="steward" placeholder="Steward name">
-        <button type="submit">Submit Report</button>
-      </form>
+  <div class="landing-content">
+    <h2 class="landing-welcome">Welcome!</h2>
+    <p class="landing-prompt">Please sign in and continue as&hellip;</p>
+
+    <div class="role-grid">
+
+      <article class="role-card role-card-organiser">
+        <div class="role-icon role-icon-organiser">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <h3 class="role-name role-name-organiser">Organiser</h3>
+        <p class="role-desc">Manage festival operations, view reports, and resolve alerts.</p>
+        <ul class="role-features">
+          <li>Resolve alerts (Alerts button in dashboard)</li>
+          <li>View crowd reports</li>
+          <li>View festival areas</li>
+          <li>View dashboard summary</li>
+        </ul>
+        <button class="role-btn role-btn-organiser" onclick="selectRole('organiser')">
+          Continue as Organiser
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </article>
+
+      <article class="role-card role-card-steward">
+        <div class="role-icon role-icon-steward">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="2"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="12" y2="16"/>
+          </svg>
+        </div>
+        <h3 class="role-name role-name-steward">Steward</h3>
+        <p class="role-desc">Submit crowd reports for areas and help keep the festival safe.</p>
+        <ul class="role-features">
+          <li>Submit crowd reports</li>
+          <li>View own reports</li>
+          <li>View festival areas</li>
+          <li>View dashboard summary</li>
+        </ul>
+        <button class="role-btn role-btn-steward" onclick="selectRole('steward')">
+          Continue as Steward
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </article>
+
+      <article class="role-card role-card-viewer">
+        <div class="role-icon role-icon-viewer">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h3 class="role-name role-name-viewer">Viewer</h3>
+        <p class="role-desc">View live dashboard, reports, areas, and active alerts.</p>
+        <ul class="role-features">
+          <li>View dashboard summary</li>
+          <li>View crowd reports</li>
+          <li>View festival areas</li>
+          <li>View active alerts (read-only)</li>
+        </ul>
+        <button class="role-btn role-btn-viewer" onclick="selectRole('viewer')">
+          Continue as Viewer
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </article>
+
     </div>
   </div>
 
   <script>
-    const areas = document.querySelectorAll('.area');
-    const modal = document.getElementById('modal');
-    const form = document.getElementById('report-form');
-    const areaIdInput = document.getElementById('area-id');
-    const modalTitle = document.getElementById('modal-title');
+    sessionStorage.removeItem('fpRole');
 
-    areas.forEach(area => {
-      area.addEventListener('click', () => {
-        const id = area.dataset.id;
-        const name = area.textContent.trim();
-        areaIdInput.value = id;
-        modalTitle.textContent = `Report: ${name}`;
-        modal.classList.add('show');
-      });
-    });
-
-    function closeModal() {
-      modal.classList.remove('show');
-      form.reset();
+    function selectRole(role) {
+      sessionStorage.setItem('fpRole', role);
+      location.href = role === 'steward' ? 'steward.html' : 'dashboard.html';
     }
-
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const areaId = areaIdInput.value;
-      const crowdLevel = document.getElementById('crowd-level').value;
-      const steward = document.getElementById('steward').value;
-
-      const params = new URLSearchParams({ areaId, crowdLevel });
-      if (steward) params.append('steward', steward);
-
-      const res = await fetch(`/api/reports?${params}`, { method: 'POST' });
-      if (res.ok) {
-        alert('✅ Report submitted!');
-        closeModal();
-      } else {
-        alert('❌ Failed to submit report.');
-      }
-    });
-
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal();
-    });
   </script>
 </body>
 </html>
