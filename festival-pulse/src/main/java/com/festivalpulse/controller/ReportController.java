@@ -29,9 +29,8 @@ public class ReportController {
 
     @PostMapping
     public CrowdReport submit(@Valid @RequestBody ReportRequest request) {
-        return crowdService.submitReport(request.areaId(), request.crowdLevel(), request.steward());
+        return crowdService.submitReport(request.areaId(), request.crowdLevel(), request.steward(), request.note());
     }
 
-    public record ReportRequest(@NotNull Long areaId, @NotNull CrowdLevel crowdLevel, String steward) {
-    }
+    public record ReportRequest(@NotNull Long areaId, @NotNull CrowdLevel crowdLevel, String steward, String note) {}
 }

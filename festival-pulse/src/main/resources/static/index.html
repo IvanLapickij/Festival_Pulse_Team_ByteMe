@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Festival Pulse – Steward Report</title>
+  <title>Festival Pulse – Steward</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     :root {
-      --bg: #0f1a14;
-      --panel: #1a2820;
-      --border: #2d4035;
-      --text: #e8f5e9;
-      --muted: #7a9e82;
+      --bg: #0d1117;
+      --panel: #111827;
+      --border: #1e2d22;
+      --text: #e2e8f0;
+      --muted: #64748b;
       --teal: #2dd4bf;
       --low: #22c55e;
       --medium: #f59e0b;
       --full: #ef4444;
-      --shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -24,465 +24,374 @@
       background: var(--bg);
       color: var(--text);
       font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-      min-height: 100vh;
+      height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow: hidden;
     }
 
-    /* ── Header ── */
+    /* Header */
     header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 24px;
+      padding: 12px 20px;
       background: var(--panel);
       border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 500;
     }
 
     .brand { display: flex; align-items: center; gap: 10px; }
-    .brand-dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--teal);
-      box-shadow: 0 0 8px var(--teal);
+    .live-dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--teal); box-shadow: 0 0 8px var(--teal);
       animation: blink 2s ease-in-out infinite;
     }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
-    .brand h1 { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
-    .brand span { font-size: 12px; color: var(--muted); margin-left: 6px; }
+    .brand-title { font-size: 15px; font-weight: 900; }
+    .brand-sub   { font-size: 11px; color: var(--muted); margin-left: 4px; }
 
-    /* ── Layout ── */
-    .layout {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: 0;
-      overflow: hidden;
+    .hint-bar {
+      font-size: 12px; color: var(--muted); font-weight: 600;
+      background: rgba(45,212,191,0.06);
+      border-bottom: 1px solid var(--border);
+      padding: 7px 20px;
+      flex-shrink: 0;
     }
 
-    /* ── Map ── */
-    .map-wrap {
-      padding: 20px;
+    /* Map fills remaining space */
+    #steward-map-root {
+      flex: 1;
+      z-index: 1;
+    }
+
+    .leaflet-tile-pane { filter: brightness(0.82) saturate(0.65); }
+
+    /* Steward area markers */
+    .s-marker {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      align-items: center;
+      background: rgba(17,24,39,0.92);
+      border: 2px solid #374151;
+      border-radius: 10px;
+      padding: 6px 10px;
+      min-width: 110px;
+      cursor: pointer;
+      transition: transform 0.15s, border-color 0.15s;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
     }
 
-    .map-hint {
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 600;
+    .s-marker:hover, .s-marker.selected {
+      border-color: var(--teal);
+      box-shadow: 0 0 16px rgba(45,212,191,0.35);
+      transform: translateY(-2px);
     }
 
-    .map-frame {
-      flex: 1;
-      border: 2px solid var(--border);
-      border-radius: 14px;
-      overflow: hidden;
-      background: #1b3022;
-      box-shadow: var(--shadow);
+    .s-marker.level-low    { border-color: #22c55e; }
+    .s-marker.level-medium { border-color: #f59e0b; }
+    .s-marker.level-full   { border-color: #ef4444; box-shadow: 0 0 18px rgba(239,68,68,0.35); }
+
+    .s-marker.selected { border-color: var(--teal) !important; box-shadow: 0 0 20px rgba(45,212,191,0.5) !important; }
+
+    .s-m-icon  { font-size: 20px; line-height: 1; }
+    .s-m-name  { font-size: 11px; font-weight: 800; color: #f1f5f9; margin-top: 3px; text-align: center; white-space: nowrap; }
+    .s-m-level { font-size: 10px; font-weight: 700; letter-spacing: 1px; margin-top: 2px; }
+    .s-marker.level-low    .s-m-level { color: #4ade80; }
+    .s-marker.level-medium .s-m-level { color: #fcd34d; }
+    .s-marker.level-full   .s-m-level { color: #f87171; }
+    .s-marker.level-unknown .s-m-level { color: #94a3b8; }
+
+    /* Pulse for FULL */
+    @keyframes s-pulse {
+      0%   { stroke-opacity: 0.9; stroke-width: 2; }
+      50%  { stroke-opacity: 0.2; stroke-width: 6; }
+      100% { stroke-opacity: 0.9; stroke-width: 2; }
     }
+    .s-hotspot-pulse { animation: s-pulse 1.8s ease-in-out infinite; }
 
-    #steward-map {
-      display: block;
-      width: 100%;
-      height: 100%;
-      min-height: 480px;
-    }
-
-    /* SVG area zones */
-    .s-area { cursor: pointer; }
-
-    .s-shape {
-      stroke: rgba(255,255,255,0.15);
-      stroke-width: 2;
-      transition: opacity 0.15s;
-      rx: 12;
-    }
-
-    .s-shape.level-low    { fill: #166534; }
-    .s-shape.level-medium { fill: #92400e; }
-    .s-shape.level-full   { fill: #7f1d1d; }
-    .s-shape.level-unknown { fill: #1e3a2a; }
-
-    .s-area:hover .s-shape,
-    .s-area.selected .s-shape {
-      stroke: var(--teal);
-      stroke-width: 3;
-      opacity: 1;
-    }
-
-    .s-area.selected .s-shape {
-      stroke-width: 4;
-      filter: drop-shadow(0 0 10px rgba(45,212,191,0.6));
-    }
-
-    .s-label, .s-icon, .s-level {
-      pointer-events: none;
-      text-anchor: middle;
-    }
-    .s-label  { fill: rgba(255,255,255,0.9); font-size: 14px; font-weight: 800; }
-    .s-icon   { fill: rgba(255,255,255,0.7); font-size: 18px; }
-    .s-level  { fill: rgba(255,255,255,0.5); font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
-
-    /* ── Report Panel ── */
-    .report-panel {
+    /* Bottom sheet */
+    #bottom-sheet {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
       background: var(--panel);
-      border-left: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      padding: 24px 20px;
-      gap: 20px;
+      border-top: 1px solid var(--border);
+      border-radius: 20px 20px 0 0;
+      padding: 0 20px 28px;
+      z-index: 1000;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+      max-height: 85vh;
       overflow-y: auto;
     }
 
-    .panel-title {
-      font-size: 13px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--teal);
+    #bottom-sheet.open { transform: translateY(0); }
+
+    .sheet-handle {
+      width: 40px; height: 4px;
+      background: #374151; border-radius: 2px;
+      margin: 12px auto 16px;
     }
 
-    /* Selected area display */
-    #selected-area-display {
-      background: #0f1a14;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      min-height: 56px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    .sheet-area-header {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 18px;
     }
 
-    #selected-area-display .area-icon-lg { font-size: 22px; }
-    #selected-area-display .area-name { font-size: 16px; font-weight: 900; }
-    #selected-area-display .area-prompt { color: var(--muted); font-size: 13px; }
+    .sheet-area-icon { font-size: 28px; }
+    .sheet-area-name { font-size: 20px; font-weight: 900; }
+    .sheet-area-level { font-size: 12px; color: var(--muted); margin-top: 2px; }
 
-    /* Crowd level buttons */
-    .level-buttons {
+    /* Level buttons */
+    .level-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 10px;
+      margin-bottom: 16px;
     }
 
-    .level-btn {
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      background: #0f1a14;
+    .lvl-btn {
+      border: 2px solid #1e293b;
+      border-radius: 12px;
+      background: #0d1117;
       color: var(--text);
-      font-size: 13px;
-      font-weight: 900;
-      padding: 14px 8px;
+      font-size: 13px; font-weight: 900;
+      padding: 16px 8px;
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 6px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
       transition: border-color 0.15s, background 0.15s;
     }
 
-    .level-btn .btn-icon { font-size: 22px; }
+    .lvl-btn .li { font-size: 24px; }
 
-    .level-btn[data-level="LOW"]:hover,
-    .level-btn[data-level="LOW"].active {
-      border-color: var(--low);
-      background: rgba(34,197,94,0.12);
-      color: #86efac;
-    }
+    .lvl-btn[data-level="LOW"].active,
+    .lvl-btn[data-level="LOW"]:hover  { border-color: var(--low);    background: rgba(34,197,94,0.12);  color: #86efac; }
+    .lvl-btn[data-level="MEDIUM"].active,
+    .lvl-btn[data-level="MEDIUM"]:hover { border-color: var(--medium); background: rgba(245,158,11,0.12); color: #fcd34d; }
+    .lvl-btn[data-level="FULL"].active,
+    .lvl-btn[data-level="FULL"]:hover { border-color: var(--full);   background: rgba(239,68,68,0.15);  color: #fca5a5; }
 
-    .level-btn[data-level="MEDIUM"]:hover,
-    .level-btn[data-level="MEDIUM"].active {
-      border-color: var(--medium);
-      background: rgba(245,158,11,0.12);
-      color: #fcd34d;
-    }
+    /* Fields */
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field label { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .level-btn[data-level="FULL"]:hover,
-    .level-btn[data-level="FULL"].active {
-      border-color: var(--full);
-      background: rgba(239,68,68,0.15);
-      color: #fca5a5;
-    }
-
-    /* Note field */
-    textarea {
-      width: 100%;
-      background: #0f1a14;
-      border: 1px solid var(--border);
+    textarea, input[type="text"] {
+      background: #0d1117;
+      border: 1px solid #1e293b;
       border-radius: 8px;
       color: var(--text);
-      font: inherit;
-      font-size: 14px;
+      font: inherit; font-size: 14px;
       padding: 10px 12px;
-      resize: none;
-      height: 72px;
-    }
-
-    textarea::placeholder { color: var(--muted); }
-    textarea:focus { outline: none; border-color: var(--teal); }
-
-    /* Submit button */
-    #submit-btn {
       width: 100%;
-      min-height: 52px;
-      border: none;
-      border-radius: 10px;
-      background: var(--teal);
-      color: #042f2e;
-      font-size: 16px;
-      font-weight: 900;
+    }
+    textarea { resize: none; height: 68px; }
+    textarea::placeholder, input::placeholder { color: var(--muted); }
+    textarea:focus, input:focus { outline: none; border-color: var(--teal); }
+
+    #submit-btn {
+      width: 100%; min-height: 52px;
+      border: none; border-radius: 12px;
+      background: var(--teal); color: #042f2e;
+      font-size: 16px; font-weight: 900;
       cursor: pointer;
       transition: opacity 0.15s, transform 0.1s;
     }
-
     #submit-btn:disabled { opacity: 0.35; cursor: not-allowed; }
     #submit-btn:not(:disabled):hover { opacity: 0.9; transform: translateY(-1px); }
-    #submit-btn:not(:disabled):active { transform: translateY(0); }
 
-    /* Toast feedback */
+    /* Toast */
     #toast {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
+      position: fixed; bottom: 80px; left: 50%;
       transform: translateX(-50%) translateY(20px);
-      background: #1a2820;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 24px;
-      font-size: 15px;
-      font-weight: 700;
-      opacity: 0;
-      transition: opacity 0.25s, transform 0.25s;
-      pointer-events: none;
-      z-index: 100;
-      white-space: nowrap;
+      background: var(--panel); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px 22px;
+      font-size: 14px; font-weight: 700;
+      opacity: 0; transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none; z-index: 2000; white-space: nowrap;
     }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #toast.success { border-color: var(--low); color: #86efac; }
     #toast.error   { border-color: var(--full); color: #fca5a5; }
 
-    /* Steward name */
-    input[type="text"] {
-      width: 100%;
-      min-height: 42px;
-      background: #0f1a14;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font: inherit;
-      font-size: 14px;
-      padding: 0 12px;
+    /* Backdrop */
+    #sheet-backdrop {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 999;
     }
-
-    input[type="text"]::placeholder { color: var(--muted); }
-    input[type="text"]:focus { outline: none; border-color: var(--teal); }
-
-    label {
-      font-size: 12px;
-      font-weight: 800;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .field { display: flex; flex-direction: column; gap: 6px; }
-
-    /* Responsive */
-    @media (max-width: 760px) {
-      .layout { grid-template-columns: 1fr; grid-template-rows: 1fr auto; }
-      .report-panel { border-left: none; border-top: 1px solid var(--border); }
-      #steward-map { min-height: 320px; }
-    }
+    #sheet-backdrop.show { display: block; }
   </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <div class="brand-dot"></div>
-    <h1>Festival Pulse</h1>
-    <span>Steward View</span>
+    <div class="live-dot"></div>
+    <span class="brand-title">Festival Pulse</span>
+    <span class="brand-sub">Steward</span>
   </div>
-  <a href="dashboard.html" style="font-size:13px;color:var(--muted);font-weight:700;">Organiser Dashboard →</a>
+  <a href="dashboard.html" style="font-size:12px;color:var(--muted);font-weight:700;">Organiser →</a>
 </header>
 
-<div class="layout">
+<div class="hint-bar">Tap an area on the map to submit a crowd report</div>
 
-  <!-- Map -->
-  <div class="map-wrap">
-    <p class="map-hint">Tap an area to select it, then submit your crowd report →</p>
-    <div class="map-frame">
-      <svg id="steward-map" viewBox="0 0 920 580" role="img" aria-label="Festival area map">
-        <defs>
-          <linearGradient id="s-ground" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#1b3022"/>
-            <stop offset="100%" stop-color="#152a1c"/>
-          </linearGradient>
-        </defs>
+<div id="steward-map-root"></div>
 
-        <rect x="0" y="0" width="920" height="580" fill="url(#s-ground)"/>
-        <rect x="12" y="12" width="896" height="556" rx="16"
-              fill="none" stroke="#2d4035" stroke-width="2" stroke-dasharray="10 6" opacity="0.6"/>
-
-        <!-- Walkways -->
-        <path d="M80 490 Q200 380 340 320 Q480 260 620 200 Q740 150 840 110"
-              fill="none" stroke="#3a3020" stroke-width="26" stroke-linecap="round" opacity="0.9"/>
-        <path d="M130 160 Q260 195 390 210 Q520 225 650 310 Q750 370 810 385"
-              fill="none" stroke="#3a3020" stroke-width="16" stroke-linecap="round" opacity="0.7"/>
-        <path d="M340 320 Q368 342 396 360"
-              fill="none" stroke="#3a3020" stroke-width="12" stroke-linecap="round" opacity="0.6"/>
-
-        <!-- Compass -->
-        <g transform="translate(878,550)">
-          <circle r="15" fill="rgba(0,0,0,0.4)"/>
-          <text text-anchor="middle" dominant-baseline="central" fill="#7a9e82" font-size="10" font-weight="900">N↑</text>
-        </g>
-
-        <g id="s-areas"></g>
-      </svg>
+<!-- Bottom sheet -->
+<div id="sheet-backdrop"></div>
+<div id="bottom-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-area-header">
+    <span id="sheet-icon" class="sheet-area-icon">📍</span>
+    <div>
+      <div id="sheet-name" class="sheet-area-name">Area</div>
+      <div id="sheet-current" class="sheet-area-level">Current: —</div>
     </div>
   </div>
 
-  <!-- Report panel -->
-  <div class="report-panel">
-    <p class="panel-title">Crowd Report</p>
-
-    <!-- Selected area -->
-    <div class="field">
-      <label>Selected Area</label>
-      <div id="selected-area-display">
-        <span class="area-prompt">← Tap an area on the map</span>
-      </div>
-    </div>
-
-    <!-- Crowd level -->
-    <div class="field">
-      <label>Crowd Level</label>
-      <div class="level-buttons">
-        <button class="level-btn" data-level="LOW" type="button">
-          <span class="btn-icon">🟢</span>LOW
-        </button>
-        <button class="level-btn" data-level="MEDIUM" type="button">
-          <span class="btn-icon">🟡</span>MEDIUM
-        </button>
-        <button class="level-btn" data-level="FULL" type="button">
-          <span class="btn-icon">🔴</span>FULL
-        </button>
-      </div>
-    </div>
-
-    <!-- Note -->
-    <div class="field">
-      <label>Note <span style="font-weight:400;text-transform:none">(optional)</span></label>
-      <textarea id="note" placeholder="e.g. Queue forming at entrance…"></textarea>
-    </div>
-
-    <!-- Steward name -->
-    <div class="field">
-      <label>Your Name <span style="font-weight:400;text-transform:none">(optional)</span></label>
-      <input type="text" id="steward" placeholder="Steward name" maxlength="100">
-    </div>
-
-    <button id="submit-btn" disabled>Select an area first</button>
+  <div class="level-grid">
+    <button class="lvl-btn" data-level="LOW"    type="button"><span class="li">🟢</span>LOW</button>
+    <button class="lvl-btn" data-level="MEDIUM" type="button"><span class="li">🟡</span>MEDIUM</button>
+    <button class="lvl-btn" data-level="FULL"   type="button"><span class="li">🔴</span>FULL</button>
   </div>
+
+  <div class="field">
+    <label>Note <span style="font-weight:400;text-transform:none">(optional)</span></label>
+    <textarea id="note" placeholder="e.g. Queue forming at gate…"></textarea>
+  </div>
+
+  <div class="field">
+    <label>Your Name <span style="font-weight:400;text-transform:none">(optional)</span></label>
+    <input type="text" id="steward" placeholder="Steward name" maxlength="100">
+  </div>
+
+  <button id="submit-btn" disabled>Select a crowd level</button>
 </div>
 
 <div id="toast"></div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
-  const AREA_SHAPES = [
-    { name: "Main Stage",      x: 56,  y: 62,  w: 300, h: 170, icon: "🎤" },
-    { name: "Food Village",    x: 540, y: 54,  w: 300, h: 150, icon: "🍔" },
-    { name: "Dance Tent",      x: 88,  y: 324, w: 248, h: 170, icon: "🎧" },
-    { name: "Bar Area",        x: 396, y: 348, w: 222, h: 130, icon: "🍺" },
-    { name: "Entrance / Exit", x: 666, y: 386, w: 190, h: 104, icon: "🚪" }
+  const FESTIVAL_CENTRE = [51.5074, -0.1278];
+  const AREA_COORDS = [
+    { name: "Main Stage",      lat: 51.5092, lng: -0.1310, icon: "🎤", radius: 60 },
+    { name: "Food Village",    lat: 51.5082, lng: -0.1245, icon: "🍔", radius: 45 },
+    { name: "Dance Tent",      lat: 51.5058, lng: -0.1305, icon: "🎧", radius: 40 },
+    { name: "Bar Area",        lat: 51.5065, lng: -0.1255, icon: "🍺", radius: 35 },
+    { name: "Entrance / Exit", lat: 51.5048, lng: -0.1278, icon: "🚪", radius: 30 }
   ];
+  const CROWD_WEIGHTS = { LOW: 0.25, MEDIUM: 0.65, FULL: 1.0 };
 
-  let selectedAreaId = null;
-  let selectedLevel  = null;
-  let areas          = [];
+  let areas = [];
+  let selectedArea = null;
+  let selectedLevel = null;
+  let sMap = null;
+  let heatLayer = null;
+  let markerLayer = null;
+  let selectedMarkerEl = null;
 
-  const svgAreas   = document.getElementById("s-areas");
-  const display    = document.getElementById("selected-area-display");
-  const submitBtn  = document.getElementById("submit-btn");
-  const toast      = document.getElementById("toast");
-  const NS         = "http://www.w3.org/2000/svg";
+  const sheet     = document.getElementById("bottom-sheet");
+  const backdrop  = document.getElementById("sheet-backdrop");
+  const submitBtn = document.getElementById("submit-btn");
+  const toast     = document.getElementById("toast");
 
-  function shapeFor(area) {
-    return AREA_SHAPES.find(s => s.name === area.name)
-      || { x: 100, y: 100, w: 200, h: 120, icon: "📍" };
+  function coordsFor(area) {
+    return AREA_COORDS.find(c => c.name === area.name)
+      || { lat: FESTIVAL_CENTRE[0], lng: FESTIVAL_CENTRE[1], icon: "📍", radius: 30 };
   }
 
-  function svgEl(tag, attrs) {
-    const el = document.createElementNS(NS, tag);
-    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
-    return el;
+  function buildHeatPoints(areas) {
+    const pts = [];
+    for (const area of areas) {
+      const c = coordsFor(area);
+      const w = CROWD_WEIGHTS[area.currentCrowdLevel] || 0.1;
+      pts.push([c.lat, c.lng, w]);
+      const jitter = area.currentCrowdLevel === "FULL" ? 8 : area.currentCrowdLevel === "MEDIUM" ? 5 : 2;
+      for (let i = 0; i < jitter; i++) {
+        pts.push([c.lat + (Math.random()-0.5)*0.0018, c.lng + (Math.random()-0.5)*0.0018, w * 0.6]);
+      }
+    }
+    return pts;
   }
 
-  function svgText(tag, attrs, text) {
-    const el = svgEl(tag, attrs);
-    el.textContent = text;
-    return el;
+  function initMap() {
+    sMap = L.map("steward-map-root", {
+      center: FESTIVAL_CENTRE, zoom: 15,
+      zoomControl: true, attributionControl: false
+    });
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 19 }).addTo(sMap);
+
+    L.circle(FESTIVAL_CENTRE, {
+      radius: 400, color: "#2dd4bf", weight: 2, dashArray: "8 6",
+      fillColor: "#2dd4bf", fillOpacity: 0.04
+    }).addTo(sMap);
+
+    heatLayer = L.heatLayer([], {
+      radius: 55, blur: 40, maxZoom: 17,
+      gradient: { 0.0: "#1a3a2a", 0.3: "#22c55e", 0.6: "#f59e0b", 0.85: "#ef4444", 1.0: "#fff" }
+    }).addTo(sMap);
+
+    markerLayer = L.layerGroup().addTo(sMap);
   }
 
-  function levelClass(level) {
-    return `level-${(level || "unknown").toLowerCase()}`;
-  }
+  function renderMarkers() {
+    markerLayer.clearLayers();
+    heatLayer.setLatLngs(buildHeatPoints(areas));
 
-  function renderMap() {
-    svgAreas.innerHTML = "";
     areas.forEach(area => {
-      const s  = shapeFor(area);
-      const cx = s.x + s.w / 2;
-      const cy = s.y + s.h / 2;
-      const level = area.currentCrowdLevel;
+      const c = coordsFor(area);
+      const level = area.currentCrowdLevel || "UNKNOWN";
+      const isSelected = selectedArea?.id === area.id;
 
-      const g = svgEl("g", { class: "s-area", role: "button", "aria-label": area.name });
-      if (String(area.id) === String(selectedAreaId)) g.classList.add("selected");
+      if (level === "FULL") {
+        L.circleMarker([c.lat, c.lng], {
+          radius: 28, color: "#ef4444", weight: 2, fillOpacity: 0, className: "s-hotspot-pulse"
+        }).addTo(markerLayer);
+      }
 
-      g.append(
-        svgEl("rect",  { x: s.x, y: s.y, width: s.w, height: s.h, rx: 12, class: `s-shape ${levelClass(level)}` }),
-        svgText("text", { x: cx, y: cy - 18, class: "s-icon" }, s.icon),
-        svgText("text", { x: cx, y: cy + 4,  class: "s-label" }, area.name),
-        svgText("text", { x: cx, y: cy + 20, class: "s-level" }, level || "NO DATA")
-      );
+      const markerEl = document.createElement("div");
+      markerEl.className = `s-marker level-${level.toLowerCase()}${isSelected ? " selected" : ""}`;
+      markerEl.innerHTML = `
+        <span class="s-m-icon">${c.icon}</span>
+        <span class="s-m-name">${area.name}</span>
+        <span class="s-m-level">${level}</span>
+      `;
 
-      g.addEventListener("click", () => selectArea(area));
-      svgAreas.appendChild(g);
+      const marker = L.marker([c.lat, c.lng], {
+        icon: L.divIcon({ className: "", html: markerEl.outerHTML, iconAnchor: [55, 20] })
+      }).addTo(markerLayer);
+
+      marker.on("click", () => openSheet(area));
     });
   }
 
-  function selectArea(area) {
-    selectedAreaId = area.id;
-    const s = shapeFor(area);
-    display.innerHTML = `
-      <span class="area-icon-lg">${s.icon}</span>
-      <span class="area-name">${area.name}</span>
-    `;
-    renderMap();
-    updateSubmitBtn();
+  function openSheet(area) {
+    selectedArea = area;
+    selectedLevel = null;
+    const c = coordsFor(area);
+    document.getElementById("sheet-icon").textContent = c.icon;
+    document.getElementById("sheet-name").textContent = area.name;
+    document.getElementById("sheet-current").textContent = `Current: ${area.currentCrowdLevel || "No data"}`;
+    document.querySelectorAll(".lvl-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("note").value = "";
+    updateSubmit();
+    sheet.classList.add("open");
+    backdrop.classList.add("show");
+    renderMarkers(); // refresh selected state
   }
 
-  function selectLevel(level) {
-    selectedLevel = level;
-    document.querySelectorAll(".level-btn").forEach(b => {
-      b.classList.toggle("active", b.dataset.level === level);
-    });
-    updateSubmitBtn();
+  function closeSheet() {
+    sheet.classList.remove("open");
+    backdrop.classList.remove("show");
   }
 
-  function updateSubmitBtn() {
-    const ready = selectedAreaId && selectedLevel;
-    submitBtn.disabled = !ready;
-    submitBtn.textContent = ready
-      ? `Submit ${selectedLevel} Report`
-      : (!selectedAreaId ? "Select an area first" : "Select a crowd level");
+  function updateSubmit() {
+    submitBtn.disabled = !selectedLevel;
+    submitBtn.textContent = selectedLevel ? `Submit ${selectedLevel} Report` : "Select a crowd level";
   }
 
   function showToast(msg, type) {
@@ -491,45 +400,43 @@
     setTimeout(() => { toast.className = ""; }, 3000);
   }
 
-  document.querySelectorAll(".level-btn").forEach(btn => {
-    btn.addEventListener("click", () => selectLevel(btn.dataset.level));
+  document.querySelectorAll(".lvl-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      selectedLevel = btn.dataset.level;
+      document.querySelectorAll(".lvl-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      updateSubmit();
+    });
   });
 
-  document.getElementById("submit-btn").addEventListener("click", async () => {
-    if (!selectedAreaId || !selectedLevel) return;
+  backdrop.addEventListener("click", closeSheet);
 
+  submitBtn.addEventListener("click", async () => {
+    if (!selectedArea || !selectedLevel) return;
     submitBtn.disabled = true;
     submitBtn.textContent = "Submitting…";
-
-    const body = {
-      areaId:     Number(selectedAreaId),
-      crowdLevel: selectedLevel,
-      steward:    document.getElementById("steward").value || null,
-      note:       document.getElementById("note").value    || null
-    };
 
     try {
       const res = await fetch("/api/reports", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify({
+          areaId:     Number(selectedArea.id),
+          crowdLevel: selectedLevel,
+          steward:    document.getElementById("steward").value || null,
+          note:       document.getElementById("note").value    || null
+        })
       });
 
       if (!res.ok) throw new Error();
 
-      showToast(`✅ ${selectedLevel} report submitted for ${areas.find(a => a.id == selectedAreaId)?.name}`, "success");
-
-      // Reset level selection, keep area selected for fast follow-up
+      showToast(`✅ ${selectedLevel} — ${selectedArea.name}`, "success");
+      closeSheet();
       selectedLevel = null;
-      document.querySelectorAll(".level-btn").forEach(b => b.classList.remove("active"));
-      document.getElementById("note").value = "";
-      updateSubmitBtn();
-
-      // Refresh area crowd levels on map
-      loadAreas();
+      await loadAreas();
     } catch {
-      showToast("❌ Could not submit report. Try again.", "error");
-      updateSubmitBtn();
+      showToast("❌ Could not submit. Try again.", "error");
+      updateSubmit();
     }
   });
 
@@ -538,11 +445,13 @@
       const res = await fetch("/api/areas");
       if (!res.ok) return;
       areas = await res.json();
-      renderMap();
-    } catch { /* offline / no server */ }
+      renderMarkers();
+    } catch {}
   }
 
+  initMap();
   loadAreas();
+  setInterval(loadAreas, 15000);
 </script>
 </body>
 </html>
