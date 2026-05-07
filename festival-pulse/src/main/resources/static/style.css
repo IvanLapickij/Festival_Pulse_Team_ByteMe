@@ -352,13 +352,31 @@ td {
   min-height: 620px;
 }
 
+.map-panel-full {
+  min-height: 640px;
+}
+
+.live-badge {
+  font-size: 12px;
+  font-weight: 900;
+  color: #16a34a;
+  letter-spacing: 0.5px;
+  animation: live-pulse 2s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
 .map-frame {
   width: 100%;
   min-height: 520px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
+  border: 2px solid #9dc4a8;
+  border-radius: 12px;
   overflow: hidden;
-  background: #eaf4ee;
+  background: #c8e6c9;
+  box-shadow: inset 0 2px 12px rgba(0,0,0,0.08);
 }
 
 #festival-map {
@@ -368,68 +386,121 @@ td {
   min-height: 520px;
 }
 
-.map-grass {
-  fill: #e7f2ec;
-}
-
-.map-route {
+/* Perimeter fence ring */
+.map-perimeter {
   fill: none;
-  stroke: #b8c4be;
+  stroke: #7aab84;
+  stroke-width: 3;
+  stroke-dasharray: 10 6;
+  opacity: 0.7;
+}
+
+/* Walkway paths */
+.map-path {
+  fill: none;
   stroke-linecap: round;
-  opacity: 0.8;
+  stroke-linejoin: round;
 }
 
-.route-main {
-  stroke-width: 28;
+.path-primary {
+  stroke: #c8b89a;
+  stroke-width: 26;
+  opacity: 0.85;
 }
 
-.route-side {
-  stroke-width: 18;
+.path-secondary {
+  stroke: #c8b89a;
+  stroke-width: 16;
+  opacity: 0.6;
+}
+
+.path-cross {
+  stroke: #c8b89a;
+  stroke-width: 12;
   opacity: 0.55;
 }
 
-.map-node {
-  fill: #ffffff;
-  stroke: #9aa8a2;
-  stroke-width: 4;
-}
-
+/* Area zones */
 .area-shape {
   cursor: pointer;
-  stroke: rgba(255, 255, 255, 0.9);
-  stroke-width: 4;
+  stroke: rgba(255,255,255,0.7);
+  stroke-width: 3;
+  rx: 10;
+  transition: filter 0.15s;
 }
 
 .area-shape.level-low {
-  fill: var(--low);
+  fill: url(#grad-low);
 }
 
 .area-shape.level-medium {
-  fill: var(--medium);
+  fill: url(#grad-medium);
+  filter: url(#glow-medium);
 }
 
 .area-shape.level-full {
-  fill: var(--full);
+  fill: url(#grad-full);
+  filter: url(#glow-full);
+  stroke: #fff;
+  stroke-width: 4;
+}
+
+.area-shape.level-unknown {
+  fill: url(#grad-unknown);
 }
 
 .map-area:hover .area-shape {
-  filter: brightness(0.96);
+  filter: brightness(1.1) drop-shadow(0 0 6px rgba(0,0,0,0.3));
 }
 
+.map-area.selected .area-shape {
+  stroke: #fff;
+  stroke-width: 5;
+  filter: drop-shadow(0 0 8px rgba(255,255,255,0.8));
+}
+
+/* Area text */
 .area-label,
-.area-level {
-  fill: #ffffff;
-  font-weight: 900;
+.area-level,
+.area-icon {
   pointer-events: none;
   text-anchor: middle;
 }
 
 .area-label {
-  font-size: 18px;
+  fill: #fff;
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 .area-level {
-  font-size: 13px;
+  fill: rgba(255,255,255,0.92);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.area-icon {
+  fill: rgba(255,255,255,0.85);
+  font-size: 20px;
+}
+
+/* Alert pulse badge on FULL areas */
+.alert-dot {
+  fill: #fff;
+  animation: pulse-dot 1.2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; r: 7; }
+  50%       { opacity: 0.4; r: 10; }
+}
+
+.alert-dot-inner {
+  fill: #dc2626;
 }
 
 .legend {

@@ -1,9 +1,9 @@
 const areaShapes = [
-  { name: "Main Stage", x: 56, y: 62, width: 300, height: 170 },
-  { name: "Food Village", x: 540, y: 54, width: 300, height: 150 },
-  { name: "Dance Tent", x: 88, y: 324, width: 248, height: 170 },
-  { name: "Bar Area", x: 396, y: 348, width: 222, height: 130 },
-  { name: "Entrance / Exit", x: 666, y: 386, width: 190, height: 104 }
+  { name: "Main Stage",    x: 56,  y: 62,  width: 300, height: 170, icon: "🎤" },
+  { name: "Food Village",  x: 540, y: 54,  width: 300, height: 150, icon: "🍔" },
+  { name: "Dance Tent",    x: 88,  y: 324, width: 248, height: 170, icon: "🎧" },
+  { name: "Bar Area",      x: 396, y: 348, width: 222, height: 130, icon: "🍺" },
+  { name: "Entrance / Exit", x: 666, y: 386, width: 190, height: 104, icon: "🚪" }
 ];
 
 const state = {
@@ -165,85 +165,83 @@ function renderDashboard() {
 function renderAreas() {
   setHeading("Live Map", "Festival Areas");
   pages.areas.innerHTML = `
-    <div class="map-layout">
-      <section class="panel map-panel">
-        <div class="panel-heading">
-          <h2>Festival Map</h2>
-          <div class="legend">
-            ${badge("LOW", "level-low")}
-            ${badge("MEDIUM", "level-medium")}
-            ${badge("FULL", "level-full")}
-          </div>
+    <section class="panel map-panel-full">
+      <div class="panel-heading">
+        <h2>Festival Map</h2>
+        <div class="legend">
+          ${badge("LOW", "level-low")}
+          ${badge("MEDIUM", "level-medium")}
+          ${badge("FULL", "level-full")}
+          <span class="live-badge">● LIVE</span>
         </div>
-        <div class="map-frame"></div>
-      </section>
-
-      <aside class="panel report-panel">
-        <h2>Submit Crowd Report</h2>
-        <form id="report-form" class="report-form">
-          <label for="area-select">Area</label>
-          <select id="area-select" required></select>
-
-          <label for="crowd-level">Crowd level</label>
-          <select id="crowd-level" required>
-            <option value="LOW">LOW</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="FULL">FULL</option>
-          </select>
-
-          <label for="steward">Reported by</label>
-          <input id="steward" type="text" maxlength="100" placeholder="Optional">
-
-          <button type="submit">Submit Report</button>
-        </form>
-        <p id="form-message" class="form-message" aria-live="polite"></p>
-      </aside>
-    </div>
+      </div>
+      <div class="map-frame"></div>
+    </section>
   `;
 
   const mapFrame = pages.areas.querySelector(".map-frame");
   mapFrame.appendChild(mapTemplate.content.cloneNode(true));
   const mapAreas = pages.areas.querySelector("#map-areas");
-  const areaSelect = pages.areas.querySelector("#area-select");
+  const ns = "http://www.w3.org/2000/svg";
 
   state.areas.forEach((area, index) => {
     const shape = shapeFor(area, index);
-    const option = document.createElement("option");
-    option.value = area.id;
-    option.textContent = area.name;
-    areaSelect.appendChild(option);
+    const crowdLevel = area.currentCrowdLevel || "UNKNOWN";
+    const hasAlert = state.activeAlerts.some((a) => a.area?.id === area.id);
+    const cx = shape.x + shape.width / 2;
+    const cy = shape.y + shape.height / 2;
 
-    const group = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    const group = document.createElementNS(ns, "g");
     group.classList.add("map-area");
-    group.addEventListener("click", () => {
-      areaSelect.value = area.id;
-    });
+    group.setAttribute("role", "img");
+    group.setAttribute("aria-label", `${area.name} — ${crowdLevel}`);
 
-    const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    const rect = document.createElementNS(ns, "rect");
     rect.setAttribute("x", shape.x);
     rect.setAttribute("y", shape.y);
     rect.setAttribute("width", shape.width);
     rect.setAttribute("height", shape.height);
-    rect.setAttribute("rx", "10");
-    rect.setAttribute("class", `area-shape ${levelClass(area.currentCrowdLevel)}`);
+    rect.setAttribute("rx", "12");
+    rect.setAttribute("class", `area-shape level-${crowdLevel.toLowerCase()}`);
 
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    label.setAttribute("x", shape.x + shape.width / 2);
-    label.setAttribute("y", shape.y + shape.height / 2 - 8);
+    const icon = document.createElementNS(ns, "text");
+    icon.setAttribute("x", cx);
+    icon.setAttribute("y", cy - 22);
+    icon.setAttribute("class", "area-icon");
+    icon.textContent = shape.icon || "";
+
+    const label = document.createElementNS(ns, "text");
+    label.setAttribute("x", cx);
+    label.setAttribute("y", cy + 6);
     label.setAttribute("class", "area-label");
     label.textContent = area.name;
 
-    const level = document.createElementNS("http://www.w3.org/2000/svg", "text");
-    level.setAttribute("x", shape.x + shape.width / 2);
-    level.setAttribute("y", shape.y + shape.height / 2 + 20);
-    level.setAttribute("class", "area-level");
-    level.textContent = area.currentCrowdLevel;
+    const levelText = document.createElementNS(ns, "text");
+    levelText.setAttribute("x", cx);
+    levelText.setAttribute("y", cy + 24);
+    levelText.setAttribute("class", "area-level");
+    levelText.textContent = crowdLevel;
 
-    group.append(rect, label, level);
+    group.append(rect, icon, label, levelText);
+
+    if (hasAlert) {
+      const bx = shape.x + shape.width - 14;
+      const by = shape.y + 14;
+      const pulse = document.createElementNS(ns, "circle");
+      pulse.setAttribute("cx", bx);
+      pulse.setAttribute("cy", by);
+      pulse.setAttribute("r", "7");
+      pulse.setAttribute("class", "alert-dot");
+      const dot = document.createElementNS(ns, "circle");
+      dot.setAttribute("cx", bx);
+      dot.setAttribute("cy", by);
+      dot.setAttribute("r", "5");
+      dot.setAttribute("class", "alert-dot-inner");
+      group.append(pulse, dot);
+    }
+
     mapAreas.appendChild(group);
   });
-
-  pages.areas.querySelector("#report-form").addEventListener("submit", submitReport);
 }
 
 function renderReportTable(reports, compact = false) {
@@ -431,32 +429,6 @@ async function loadData() {
   renderRoute();
 }
 
-async function submitReport(event) {
-  event.preventDefault();
-  const formMessage = pages.areas.querySelector("#form-message");
-  formMessage.textContent = "";
-
-  const payload = {
-    areaId: Number(pages.areas.querySelector("#area-select").value),
-    crowdLevel: pages.areas.querySelector("#crowd-level").value,
-    steward: pages.areas.querySelector("#steward").value || null
-  };
-
-  const response = await fetch("/api/reports", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  if (!response.ok) {
-    formMessage.textContent = "Report could not be submitted.";
-    return;
-  }
-
-  formMessage.textContent = "Report submitted.";
-  await loadData();
-}
-
 async function resolveAlert(id) {
   const response = await fetch(`/api/alerts/${id}/resolve`, { method: "PUT" });
   if (response.ok) {
@@ -469,3 +441,6 @@ refreshButton.addEventListener("click", loadData);
 loadData().catch(() => {
   pages.dashboard.innerHTML = emptyState("Dashboard could not be loaded.");
 });
+
+// Auto-refresh every 15 s so steward reports appear without manual refresh
+setInterval(() => loadData().catch(() => {}), 15000);
