@@ -3,315 +3,122 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Festival Pulse – Steward</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
-  <style>
-    :root {
-      --bg: #0d1117; --panel: #111827; --border: #1e2d22;
-      --text: #e2e8f0; --muted: #64748b;
-      --teal: #2dd4bf; --low: #22c55e; --medium: #f59e0b; --full: #ef4444;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg); color: var(--text); font-family: Inter, ui-sans-serif, system-ui, sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
-    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 500; }
-    .brand { display: flex; align-items: center; gap: 10px; }
-    .live-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--teal); box-shadow: 0 0 8px var(--teal); animation: liveBreath 1.6s ease-in-out infinite; }
-    @keyframes liveBreath { 0%,100%{opacity:.45;transform:scale(.9)} 50%{opacity:1;transform:scale(1.15)} }
-    .brand-title { font-size: 15px; font-weight: 900; }
-    .brand-sub { font-size: 11px; color: var(--muted); margin-left: 4px; }
-    .hint-bar { font-size: 12px; color: var(--muted); font-weight: 600; background: rgba(45,212,191,0.06); border-bottom: 1px solid var(--border); padding: 7px 20px; flex-shrink: 0; }
-
-    #steward-map-root { flex: 1; z-index: 1; min-height: 0; }
-    .leaflet-tile-pane { filter: brightness(0.82) saturate(0.65); }
-
-    /* Venue pins — same style as organiser map */
-    .venue-pin {
-      position: relative; width: 44px; height: 44px;
-      border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
-      display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.5); cursor: pointer;
-      transition: transform 0.15s;
-    }
-    .venue-pin:hover { transform: rotate(-45deg) scale(1.12); }
-    .venue-pin.level-low    { background: #16a34a; border: 2px solid #4ade80; }
-    .venue-pin.level-medium { background: #b45309; border: 2px solid #fcd34d; }
-    .venue-pin.level-full   { background: #b91c1c; border: 2px solid #f87171; }
-    .venue-pin.level-unknown { background: #334155; border: 2px solid #64748b; }
-    .venue-pin.selected { border-color: var(--teal) !important; box-shadow: 0 0 20px rgba(45,212,191,0.6) !important; }
-    .venue-pin.level-full::after { content:""; position:absolute; inset:-10px; border-radius:50%; border:2px solid rgba(239,68,68,.8); animation:alertPulse 1.8s ease-out infinite; }
-    @keyframes alertPulse { 0%{transform:scale(.75);opacity:.85} 100%{transform:scale(2);opacity:0} }
-    .venue-icon { transform: rotate(45deg); width: 24px; height: 24px; color: #fff; display: flex; align-items: center; justify-content: center; }
-    .venue-icon svg { width: 20px; height: 20px; fill: #fff; }
-    .venue-label { position: absolute; top: 50px; left: 50%; transform: translateX(-50%); background: rgba(15,23,42,.92); border: 1px solid rgba(255,255,255,.1); border-radius: 6px; padding: 3px 8px; white-space: nowrap; text-align: center; pointer-events: none; }
-    .venue-label strong { display: block; font-size: 11px; font-weight: 800; color: #f1f5f9; }
-    .venue-label span { display: block; font-size: 9px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: #94a3b8; }
-
-    /* Bottom sheet */
-    #bottom-sheet { position: fixed; bottom: 0; left: 0; right: 0; background: var(--panel); border-top: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 0 20px 28px; z-index: 1000; transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.32,0.72,0,1); max-height: 85vh; overflow-y: auto; }
-    #bottom-sheet.open { transform: translateY(0); }
-    .sheet-handle { width: 40px; height: 4px; background: #374151; border-radius: 2px; margin: 12px auto 16px; }
-    .sheet-area-header { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-    .sheet-area-icon { font-size: 28px; }
-    .sheet-area-name { font-size: 20px; font-weight: 900; }
-    .sheet-area-level { font-size: 12px; color: var(--muted); margin-top: 2px; }
-
-    .level-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-bottom: 16px; }
-    .lvl-btn { border: 2px solid #1e293b; border-radius: 12px; background: #0d1117; color: var(--text); font-size: 13px; font-weight: 900; padding: 16px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 6px; transition: border-color .15s, background .15s; }
-    .lvl-btn .li { font-size: 24px; }
-    .lvl-btn[data-level="LOW"].active,.lvl-btn[data-level="LOW"]:hover { border-color:var(--low); background:rgba(34,197,94,.12); color:#86efac; }
-    .lvl-btn[data-level="MEDIUM"].active,.lvl-btn[data-level="MEDIUM"]:hover { border-color:var(--medium); background:rgba(245,158,11,.12); color:#fcd34d; }
-    .lvl-btn[data-level="FULL"].active,.lvl-btn[data-level="FULL"]:hover { border-color:var(--full); background:rgba(239,68,68,.15); color:#fca5a5; }
-
-    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
-    .field label { font-size: 11px; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
-    textarea, input[type="text"] { background: #0d1117; border: 1px solid #1e293b; border-radius: 8px; color: var(--text); font: inherit; font-size: 14px; padding: 10px 12px; width: 100%; }
-    textarea { resize: none; height: 68px; }
-    textarea::placeholder, input::placeholder { color: var(--muted); }
-    textarea:focus, input:focus { outline: none; border-color: var(--teal); }
-
-    #submit-btn { width: 100%; min-height: 52px; border: none; border-radius: 12px; background: var(--teal); color: #042f2e; font-size: 16px; font-weight: 900; cursor: pointer; transition: opacity .15s, transform .1s; }
-    #submit-btn:disabled { opacity: .35; cursor: not-allowed; }
-    #submit-btn:not(:disabled):hover { opacity: .9; transform: translateY(-1px); }
-
-    #toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 22px; font-size: 14px; font-weight: 700; opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; z-index: 2000; white-space: nowrap; }
-    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-    #toast.success { border-color: var(--low); color: #86efac; }
-    #toast.error   { border-color: var(--full); color: #fca5a5; }
-
-    #sheet-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 999; }
-    #sheet-backdrop.show { display: block; }
-  </style>
+  <title>Festival Pulse – Welcome</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="landing-body">
 
-<header>
-  <div class="brand">
-    <div class="live-dot"></div>
-    <span class="brand-title">Festival Pulse</span>
-    <span class="brand-sub">Steward</span>
-  </div>
-  <a href="dashboard.html" style="font-size:12px;color:var(--muted);font-weight:700;">Organiser →</a>
-</header>
-
-<div class="hint-bar">Tap an area on the map to submit a crowd report</div>
-<div id="steward-map-root"></div>
-
-<div id="sheet-backdrop"></div>
-<div id="bottom-sheet">
-  <div class="sheet-handle"></div>
-  <div class="sheet-area-header">
-    <span id="sheet-icon" class="sheet-area-icon">📍</span>
-    <div>
-      <div id="sheet-name" class="sheet-area-name">Area</div>
-      <div id="sheet-current" class="sheet-area-level">Current: —</div>
+  <div class="landing-hero">
+    <div class="landing-hero-overlay"></div>
+    <div class="landing-hero-content">
+      <div class="landing-pulse-icon">
+        <svg width="52" height="32" viewBox="0 0 52 32" fill="none" aria-hidden="true">
+          <polyline points="0,16 8,16 13,4 20,28 27,8 33,24 38,16 52,16"
+                    stroke="#f97316" stroke-width="3" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h1 class="landing-title">Festival Pulse</h1>
+      <p class="landing-tagline">Real-time crowd insights. Safer festivals.</p>
     </div>
   </div>
-  <div class="level-grid">
-    <button class="lvl-btn" data-level="LOW"    type="button"><span class="li">🟢</span>LOW</button>
-    <button class="lvl-btn" data-level="MEDIUM" type="button"><span class="li">🟡</span>MEDIUM</button>
-    <button class="lvl-btn" data-level="FULL"   type="button"><span class="li">🔴</span>FULL</button>
+
+  <div class="landing-content">
+    <h2 class="landing-welcome">Welcome!</h2>
+    <p class="landing-prompt">Please sign in and continue as&hellip;</p>
+
+    <div class="role-grid">
+
+      <article class="role-card">
+        <div class="role-icon role-icon-organiser">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+        </div>
+        <h3 class="role-name role-name-organiser">Organiser</h3>
+        <p class="role-desc">Manage festival operations, view reports, and resolve alerts.</p>
+        <ul class="role-features">
+          <li>Resolve alerts (Alerts button in dashboard)</li>
+          <li>View crowd reports</li>
+          <li>View festival areas</li>
+          <li>View dashboard summary</li>
+        </ul>
+        <button class="role-btn role-btn-organiser" onclick="selectRole('organiser')">
+          Continue as Organiser
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </article>
+
+      <article class="role-card">
+        <div class="role-icon role-icon-steward">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
+            <rect x="9" y="3" width="6" height="4" rx="2"/>
+            <line x1="9" y1="12" x2="15" y2="12"/>
+            <line x1="9" y1="16" x2="12" y2="16"/>
+          </svg>
+        </div>
+        <h3 class="role-name role-name-steward">Steward</h3>
+        <p class="role-desc">Submit crowd reports for areas and help keep the festival safe.</p>
+        <ul class="role-features">
+          <li>Submit crowd reports</li>
+          <li>View own reports</li>
+          <li>View festival areas</li>
+          <li>View dashboard summary</li>
+        </ul>
+        <button class="role-btn role-btn-steward" onclick="selectRole('steward')">
+          Continue as Steward
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </article>
+
+      <article class="role-card">
+        <div class="role-icon role-icon-viewer">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h3 class="role-name role-name-viewer">Viewer</h3>
+        <p class="role-desc">View live dashboard, reports, areas, and active alerts.</p>
+        <ul class="role-features">
+          <li>View dashboard summary</li>
+          <li>View crowd reports</li>
+          <li>View festival areas</li>
+          <li>View active alerts (read-only)</li>
+        </ul>
+        <button class="role-btn role-btn-viewer" onclick="selectRole('viewer')">
+          Continue as Viewer
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </article>
+
+    </div>
   </div>
-  <div class="field">
-    <label>Note <span style="font-weight:400;text-transform:none">(optional)</span></label>
-    <textarea id="note" placeholder="e.g. Queue forming at gate…"></textarea>
-  </div>
-  <div class="field">
-    <label>Your Name <span style="font-weight:400;text-transform:none">(optional)</span></label>
-    <input type="text" id="steward" placeholder="Steward name" maxlength="100">
-  </div>
-  <button id="submit-btn" disabled>Select a crowd level</button>
-</div>
 
-<div id="toast"></div>
+  <script>
+    sessionStorage.removeItem('fpRole');
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
-<script>
-  // Athlone, County Westmeath, Ireland
-  const FESTIVAL_CENTRE = [53.4239, -7.9407];
-  const AREA_COORDS = [
-    { name: "Main Stage",      lat: 53.4258, lng: -7.9440, svgIcon: "stage"    },
-    { name: "Food Village",    lat: 53.4248, lng: -7.9375, svgIcon: "food"     },
-    { name: "Dance Tent",      lat: 53.4225, lng: -7.9435, svgIcon: "tent"     },
-    { name: "Bar Area",        lat: 53.4232, lng: -7.9380, svgIcon: "bar"      },
-    { name: "Entrance / Exit", lat: 53.4212, lng: -7.9407, svgIcon: "entrance" }
-  ];
-  const CROWD_WEIGHTS = { LOW: 0.25, MEDIUM: 0.65, FULL: 1.0 };
-  const VENUE_SVGS = {
-    stage:    `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l9 7H3l9-7zm0 2.5L5.5 10h13L12 5.5zM3 11h18v2H3v-2zm2 3h14v7H5v-7zm2 2v3h10v-3H7z"/></svg>`,
-    food:     `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.06 22.99h1.66c.84 0 1.53-.64 1.63-1.46L23 5.05h-5V1h-1.97v4.05h-4.97l.3 2.34c1.71.47 3.31 1.32 4.27 2.26 1.44 1.42 2.43 2.89 2.43 5.29v8.05zM1 21.99V21h15.03v.99c0 .55-.45 1-1.01 1H2.01c-.56 0-1.01-.45-1.01-1zm15.03-7c0-8-15.03-8-15.03 0h15.03zM1.02 17h15v2h-15z"/></svg>`,
-    tent:     `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 19h20L12 2zm0 3.5L19.5 19h-15L12 5.5zM11 10v4h2v-4h-2zm0 6v2h2v-2h-2z"/></svg>`,
-    bar:      `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v2l6.5 9V19H8v2h8v-2h-2.5v-5L20 5V3zm-2.5 2l-2 3h-7l-2-3h11z"/></svg>`,
-    entrance: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1V7c0-.55-.45-1-1-1h-3c-.55 0-1 .45-1 1v5h-4V7c0-.55-.45-1-1-1H6c-.55 0-1 .45-1 1v12c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z"/></svg>`,
-    default:  `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="8"/></svg>`
-  };
-
-  let areas = [], selectedArea = null, selectedLevel = null;
-  let sMap = null, heatLayer = null, markerLayer = null;
-
-  const sheet = document.getElementById("bottom-sheet");
-  const backdrop = document.getElementById("sheet-backdrop");
-  const submitBtn = document.getElementById("submit-btn");
-  const toast = document.getElementById("toast");
-
-  function coordsFor(area) {
-    return AREA_COORDS.find(c => c.name === area.name)
-      || { lat: FESTIVAL_CENTRE[0], lng: FESTIVAL_CENTRE[1], svgIcon: "default" };
-  }
-
-  function buildHeatPoints(areas) {
-    const pts = [];
-    for (const area of areas) {
-      const c = coordsFor(area);
-      const w = CROWD_WEIGHTS[area.currentCrowdLevel] || 0.1;
-      const spread = area.currentCrowdLevel === "FULL" ? 0.0007 : area.currentCrowdLevel === "MEDIUM" ? 0.00045 : 0.00025;
-      const count  = area.currentCrowdLevel === "FULL" ? 18 : area.currentCrowdLevel === "MEDIUM" ? 10 : 5;
-      pts.push([c.lat, c.lng, w]);
-      for (let i = 0; i < count; i++) {
-        pts.push([c.lat + (Math.random()-.5)*spread, c.lng + (Math.random()-.5)*spread, w*(0.55+Math.random()*0.35)]);
-      }
+    function selectRole(role) {
+      sessionStorage.setItem('fpRole', role);
+      location.href = role === 'steward' ? 'steward.html' : 'dashboard.html';
     }
-    return pts;
-  }
-
-  function makeVenueIcon(area, level, isSelected) {
-    const c = coordsFor(area);
-    const svg = VENUE_SVGS[c.svgIcon] || VENUE_SVGS.default;
-    const levelCls = `level-${(level||"unknown").toLowerCase()}`;
-    const selCls = isSelected ? " selected" : "";
-    return L.divIcon({
-      className: "",
-      html: `<div class="venue-pin ${levelCls}${selCls}">
-               <div class="venue-icon">${svg}</div>
-             </div>
-             <div class="venue-label">
-               <strong>${area.name}</strong>
-               <span>${level || "—"}</span>
-             </div>`,
-      iconSize: [44, 60], iconAnchor: [22, 56], popupAnchor: [0, -56]
-    });
-  }
-
-  function initMap() {
-    sMap = L.map("steward-map-root", {
-      center: FESTIVAL_CENTRE, zoom: 16, minZoom: 14, maxZoom: 20,
-      dragging: true, touchZoom: true, scrollWheelZoom: true,
-      doubleClickZoom: true, zoomControl: true, attributionControl: false
-    });
-
-    const bounds = L.latLngBounds(
-      [FESTIVAL_CENTRE[0]-0.015, FESTIVAL_CENTRE[1]-0.020],
-      [FESTIVAL_CENTRE[0]+0.015, FESTIVAL_CENTRE[1]+0.020]
-    );
-    sMap.setMaxBounds(bounds.pad(0.5));
-
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", { maxZoom: 20 }).addTo(sMap);
-    L.circle(FESTIVAL_CENTRE, { radius: 350, color: "#2dd4bf", weight: 2, dashArray: "8 6", fillColor: "#2dd4bf", fillOpacity: 0.04 }).addTo(sMap);
-
-    heatLayer = L.heatLayer([], {
-      radius: 42, blur: 34, maxZoom: 19, max: 1.0,
-      gradient: { 0.20: "#22c55e", 0.45: "#facc15", 0.70: "#f97316", 1.00: "#ef4444" }
-    }).addTo(sMap);
-
-    markerLayer = L.layerGroup().addTo(sMap);
-  }
-
-  function renderMarkers() {
-    markerLayer.clearLayers();
-    heatLayer.setLatLngs(buildHeatPoints(areas));
-    areas.forEach(area => {
-      const c = coordsFor(area);
-      const level = area.currentCrowdLevel || "UNKNOWN";
-      const isSelected = selectedArea?.id === area.id;
-      const marker = L.marker([c.lat, c.lng], {
-        icon: makeVenueIcon(area, level, isSelected)
-      }).addTo(markerLayer);
-      marker.on("click", () => openSheet(area));
-    });
-  }
-
-  function openSheet(area) {
-    selectedArea = area;
-    selectedLevel = null;
-    const c = coordsFor(area);
-    const iconMap = { stage:"🎤", food:"🍔", tent:"🎧", bar:"🍺", entrance:"🚪", default:"📍" };
-    document.getElementById("sheet-icon").textContent = iconMap[c.svgIcon] || "📍";
-    document.getElementById("sheet-name").textContent = area.name;
-    document.getElementById("sheet-current").textContent = `Current: ${area.currentCrowdLevel || "No data"}`;
-    document.querySelectorAll(".lvl-btn").forEach(b => b.classList.remove("active"));
-    document.getElementById("note").value = "";
-    updateSubmit();
-    sheet.classList.add("open");
-    backdrop.classList.add("show");
-    renderMarkers();
-  }
-
-  function closeSheet() {
-    sheet.classList.remove("open");
-    backdrop.classList.remove("show");
-  }
-
-  function updateSubmit() {
-    submitBtn.disabled = !selectedLevel;
-    submitBtn.textContent = selectedLevel ? `Submit ${selectedLevel} Report` : "Select a crowd level";
-  }
-
-  function showToast(msg, type) {
-    toast.textContent = msg;
-    toast.className = `show ${type}`;
-    setTimeout(() => { toast.className = ""; }, 3000);
-  }
-
-  document.querySelectorAll(".lvl-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      selectedLevel = btn.dataset.level;
-      document.querySelectorAll(".lvl-btn").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      updateSubmit();
-    });
-  });
-
-  backdrop.addEventListener("click", closeSheet);
-
-  submitBtn.addEventListener("click", async () => {
-    if (!selectedArea || !selectedLevel) return;
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Submitting…";
-    try {
-      const res = await fetch("/api/reports", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          areaId: Number(selectedArea.id),
-          crowdLevel: selectedLevel,
-          steward: document.getElementById("steward").value || null,
-          note: document.getElementById("note").value || null
-        })
-      });
-      if (!res.ok) throw new Error();
-      showToast(`✅ ${selectedLevel} — ${selectedArea.name}`, "success");
-      closeSheet();
-      selectedLevel = null;
-      await loadAreas();
-    } catch {
-      showToast("❌ Could not submit. Try again.", "error");
-      updateSubmit();
-    }
-  });
-
-  async function loadAreas() {
-    try {
-      const res = await fetch("/api/areas");
-      if (!res.ok) return;
-      areas = await res.json();
-      renderMarkers();
-    } catch {}
-  }
-
-  initMap();
-  loadAreas();
-  setInterval(loadAreas, 15000);
-</script>
+  </script>
 </body>
 </html>

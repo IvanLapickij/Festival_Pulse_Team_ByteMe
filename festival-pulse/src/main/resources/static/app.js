@@ -1,3 +1,21 @@
+// ── Role-based access ────────────────────────────────────────────────────────
+const role = sessionStorage.getItem('fpRole');
+if (!role) { location.href = 'index.html'; }
+
+const ROLE_LABELS     = { organiser: 'Organiser', steward: 'Steward', viewer: 'Viewer' };
+const ROLE_DOT_COLORS = { organiser: '#7c3aed',   steward: '#1d4ed8',  viewer: '#059669' };
+
+function initRole() {
+  document.querySelectorAll('.nav-link[data-roles]').forEach(link => {
+    if (!link.dataset.roles.split(',').includes(role)) link.remove();
+  });
+  const label = document.getElementById('role-label');
+  const dot   = document.getElementById('role-dot');
+  if (label) label.textContent = ROLE_LABELS[role] || role;
+  if (dot)   dot.style.background = ROLE_DOT_COLORS[role] || '#667085';
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Festival centre: Athlone, County Westmeath, Ireland
 const FESTIVAL_CENTRE = [53.4239, -7.9407];
 const AREA_COORDS = [
@@ -612,7 +630,7 @@ function renderAlerts() {
         <h2>All Alerts</h2>
         <span class="count-pill">${state.alerts.length} total</span>
       </div>
-      ${renderAlertList(sortedAlerts(), true)}
+      ${renderAlertList(sortedAlerts(), role === 'organiser')}
     </section>
   `;
 
@@ -663,6 +681,7 @@ async function resolveAlert(id) {
   }
 }
 
+initRole();
 window.addEventListener("hashchange", renderRoute);
 refreshButton.addEventListener("click", loadData);
 loadData().catch(() => {

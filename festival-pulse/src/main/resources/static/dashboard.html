@@ -19,11 +19,20 @@
       </div>
 
       <nav class="nav-list">
-        <a class="nav-link" href="#dashboard" data-route="dashboard">Dashboard</a>
-        <a class="nav-link" href="#areas" data-route="areas">Areas</a>
-        <a class="nav-link" href="#reports" data-route="reports">Reports</a>
-        <a class="nav-link" href="#alerts" data-route="alerts">Alerts</a>
+        <a class="nav-link" href="#dashboard" data-route="dashboard" data-roles="organiser,steward,viewer">Dashboard</a>
+        <a class="nav-link" href="#areas"     data-route="areas"     data-roles="organiser,steward,viewer">Areas</a>
+        <a class="nav-link" href="#reports"   data-route="reports"   data-roles="organiser,steward,viewer">Reports</a>
+        <a class="nav-link" href="#alerts"    data-route="alerts"    data-roles="organiser,viewer">Alerts</a>
+        <a class="nav-link" href="steward.html"                      data-roles="steward">Submit Report</a>
       </nav>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-role">
+          <span class="sidebar-role-dot" id="role-dot"></span>
+          <span id="role-label">Loading…</span>
+        </div>
+        <a href="index.html" class="sidebar-switch">Switch Role</a>
+      </div>
     </aside>
 
     <main class="content">
@@ -36,10 +45,10 @@
       </div>
 
       <section id="dashboard-page" class="page-view"></section>
-      <section id="areas-page" class="page-view" hidden></section>
-      <section id="reports-page" class="page-view" hidden></section>
+      <section id="areas-page"     class="page-view" hidden></section>
+      <section id="reports-page"   class="page-view" hidden></section>
       <section id="report-detail-page" class="page-view" hidden></section>
-      <section id="alerts-page" class="page-view" hidden></section>
+      <section id="alerts-page"    class="page-view" hidden></section>
     </main>
   </div>
 
