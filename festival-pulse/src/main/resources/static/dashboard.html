@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Festival Pulse Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Festival Pulse</h1>
+      <p>Live crowd reports and active area alerts</p>
+    </div>
+    <button id="refresh-button" type="button">Refresh</button>
+  </header>
+
+  <main class="layout">
+    <section class="map-panel" aria-label="Festival map">
+      <svg id="festival-map" viewBox="0 0 900 560" role="img" aria-labelledby="map-title">
+        <title id="map-title">Festival area crowd map</title>
+        <rect class="map-background" x="0" y="0" width="900" height="560"></rect>
+        <path class="path" d="M80 460 C220 360, 330 410, 470 300 S700 220, 815 100"></path>
+        <g id="map-areas"></g>
+      </svg>
+    </section>
+
+    <aside class="side-panel">
+      <section class="panel">
+        <h2>Submit Report</h2>
+        <form id="report-form">
+          <label for="area-select">Area</label>
+          <select id="area-select" required></select>
+
+          <label for="crowd-level">Crowd level</label>
+          <select id="crowd-level" required>
+            <option value="LOW">LOW</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="FULL">FULL</option>
+          </select>
+
+          <label for="steward">Steward</label>
+          <input id="steward" type="text" maxlength="100" placeholder="Optional">
+
+          <button type="submit">Submit Report</button>
+        </form>
+        <p id="form-message" class="message" aria-live="polite"></p>
+      </section>
+
+      <section class="panel">
+        <div class="panel-heading">
+          <h2>Active Alerts</h2>
+          <span id="alert-count">0</span>
+        </div>
+        <ul id="alerts-list" class="alerts-list"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

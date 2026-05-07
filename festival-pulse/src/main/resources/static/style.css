@@ -1,0 +1,250 @@
+:root {
+  --bg: #f5f7f6;
+  --text: #17201d;
+  --muted: #60706a;
+  --line: #d7dfdc;
+  --panel: #ffffff;
+  --low: #2f9e44;
+  --medium: #f0a202;
+  --full: #d62828;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 28px;
+  border-bottom: 1px solid var(--line);
+  background: #ffffff;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+}
+
+h2 {
+  font-size: 18px;
+}
+
+.topbar p,
+.message,
+.empty {
+  color: var(--muted);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 20px;
+  padding: 20px;
+}
+
+.map-panel,
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.map-panel {
+  min-height: 520px;
+  padding: 12px;
+}
+
+#festival-map {
+  display: block;
+  width: 100%;
+  height: min(70vh, 650px);
+}
+
+.map-background {
+  fill: #eaf0ed;
+}
+
+.path {
+  fill: none;
+  stroke: #aab8b2;
+  stroke-width: 24;
+  stroke-linecap: round;
+  opacity: 0.55;
+}
+
+.area-shape {
+  stroke: #ffffff;
+  stroke-width: 4;
+  cursor: pointer;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.area-shape:hover {
+  opacity: 0.86;
+}
+
+.area-low {
+  fill: var(--low);
+}
+
+.area-medium {
+  fill: var(--medium);
+}
+
+.area-full {
+  fill: var(--full);
+}
+
+.area-label {
+  fill: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+.area-level {
+  fill: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  pointer-events: none;
+  text-anchor: middle;
+}
+
+.side-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel {
+  padding: 18px;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+#alert-count {
+  display: inline-grid;
+  min-width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  background: #17201d;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+form {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #34413d;
+}
+
+input,
+select,
+button {
+  width: 100%;
+  min-height: 42px;
+  border-radius: 6px;
+  font: inherit;
+}
+
+input,
+select {
+  border: 1px solid #c7d1cd;
+  background: #ffffff;
+  color: var(--text);
+  padding: 0 10px;
+}
+
+button {
+  border: 0;
+  background: #176b4d;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 14px;
+}
+
+button:hover {
+  background: #0f5a3f;
+}
+
+.message {
+  min-height: 20px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.alerts-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  margin: 16px 0 0;
+  list-style: none;
+}
+
+.alert-item {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #f1c0c0;
+  border-left: 6px solid var(--full);
+  border-radius: 8px;
+  background: #fff7f7;
+}
+
+.alert-title {
+  font-weight: 700;
+}
+
+.alert-meta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.alert-item button {
+  background: #343a40;
+}
+
+.alert-item button:hover {
+  background: #212529;
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

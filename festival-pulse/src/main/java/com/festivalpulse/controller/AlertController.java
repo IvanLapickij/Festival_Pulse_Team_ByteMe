@@ -1,26 +1,28 @@
 package com.festivalpulse.controller;
 
-import com.festivalpulse.model.Alert;
+import com.festivalpulse.model.CrowdAlert;
 import com.festivalpulse.service.CrowdService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/alerts")
-@RequiredArgsConstructor
 public class AlertController {
 
     private final CrowdService crowdService;
 
-    @GetMapping
-    public List<Alert> active() {
+    public AlertController(CrowdService crowdService) {
+        this.crowdService = crowdService;
+    }
+
+    @GetMapping("/active")
+    public List<CrowdAlert> active() {
         return crowdService.getActiveAlerts();
     }
 
-    @PatchMapping("/{id}/resolve")
-    public void resolve(@PathVariable Long id) {
-        crowdService.resolveAlert(id);
+    @PutMapping("/{id}/resolve")
+    public CrowdAlert resolve(@PathVariable Long id) {
+        return crowdService.resolveAlert(id);
     }
 }
