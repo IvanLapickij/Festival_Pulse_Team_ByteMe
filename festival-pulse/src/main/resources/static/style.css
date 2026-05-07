@@ -16,7 +16,13 @@
   --active: #be123c;
   --resolved: #475467;
   --shadow: 0 16px 38px rgba(16, 24, 40, 0.08);
+  --accent: #6d28d9;
+  --accent-nav: #c4b5fd;
 }
+
+body.role-organiser { --accent: #6d28d9; --accent-nav: #c4b5fd; }
+body.role-steward   { --accent: #2563eb; --accent-nav: #93c5fd; }
+body.role-viewer    { --accent: #059669; --accent-nav: #6ee7b7; }
 
 * {
   box-sizing: border-box;
@@ -82,8 +88,8 @@ p {
   height: 42px;
   place-items: center;
   border-radius: 8px;
-  background: #2dd4bf;
-  color: #042f2e;
+  background: var(--accent);
+  color: #ffffff;
   font-weight: 800;
 }
 
@@ -115,12 +121,14 @@ p {
   border-radius: 8px;
   color: #d0d5dd;
   font-weight: 700;
+  border-left: 3px solid transparent;
 }
 
 .nav-link:hover,
 .nav-link.active {
-  background: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent-nav);
+  border-left: 3px solid var(--accent-nav);
 }
 
 .content {
@@ -137,7 +145,7 @@ p {
 }
 
 .kicker {
-  color: #0f766e;
+  color: var(--accent);
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0;
@@ -162,7 +170,7 @@ form button,
   min-height: 40px;
   border: 0;
   border-radius: 8px;
-  background: #0f766e;
+  background: var(--accent);
   color: #ffffff;
   font-weight: 800;
   padding: 0 14px;
@@ -256,7 +264,7 @@ form button,
 }
 
 .text-link {
-  color: #0f766e;
+  color: var(--accent);
   font-size: 13px;
   font-weight: 800;
 }

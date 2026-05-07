@@ -6,6 +6,7 @@ const ROLE_LABELS     = { organiser: 'Organiser', steward: 'Steward', viewer: 'V
 const ROLE_DOT_COLORS = { organiser: '#7c3aed',   steward: '#1d4ed8',  viewer: '#059669' };
 
 function initRole() {
+  document.body.classList.add('role-' + role);
   document.querySelectorAll('.nav-link[data-roles]').forEach(link => {
     if (!link.dataset.roles.split(',').includes(role)) link.remove();
   });
