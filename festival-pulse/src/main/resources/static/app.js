@@ -277,8 +277,10 @@ function renderAreas() {
     return;
   }
 
-  let editMode = false;
-  const editMarkers = {}; // areaId -> L.marker (for dragend)
+  const isOrganiser = role === "organiser";
+  let editMode = isOrganiser;
+  _mapEditMode = isOrganiser;
+  const editMarkers = {};
 
   pages.areas.innerHTML = `
     <div class="org-map-shell">
@@ -290,7 +292,7 @@ function renderAreas() {
         </div>
         <div style="display:flex;gap:8px;align-items:center">
           <span class="live-badge">● LIVE</span>
-          <button id="edit-mode-btn" class="secondary-button" style="min-height:32px;padding:0 12px;font-size:12px">✏ Edit Map</button>
+          ${isOrganiser ? `<button id="edit-mode-btn" style="min-height:32px;padding:0 12px;font-size:12px;border:0;border-radius:8px;font-weight:800;cursor:pointer;background:#ef4444;color:#fff">✕ Exit Edit</button>` : ""}
         </div>
       </div>
       <div class="org-map-body">
@@ -307,16 +309,18 @@ function renderAreas() {
     document.getElementById("area-detail-panel").hidden = true;
   });
 
-  document.getElementById("edit-mode-btn").addEventListener("click", () => {
-    editMode = !editMode;
-    _mapEditMode = editMode;
-    const btn = document.getElementById("edit-mode-btn");
-    btn.textContent = editMode ? "✕ Exit Edit" : "✏ Edit Map";
-    btn.style.background = editMode ? "#ef4444" : "";
-    btn.style.color = editMode ? "#fff" : "";
-    buildMarkers(editMode);
-    showEditPanel(editMode);
-  });
+  if (isOrganiser) {
+    document.getElementById("edit-mode-btn").addEventListener("click", () => {
+      editMode = !editMode;
+      _mapEditMode = editMode;
+      const btn = document.getElementById("edit-mode-btn");
+      btn.textContent = editMode ? "✕ Exit Edit" : "✏ Edit Map";
+      btn.style.background = editMode ? "#ef4444" : "";
+      btn.style.color = editMode ? "#fff" : "";
+      buildMarkers(editMode);
+      showEditPanel(editMode);
+    });
+  }
 
   function showEditPanel(show) {
     const panel = document.getElementById("area-detail-panel");
@@ -494,7 +498,8 @@ function renderAreas() {
   }
 
   _buildMarkers = buildMarkers;
-  buildMarkers(false);
+  buildMarkers(editMode);
+  if (isOrganiser) showEditPanel(true);
 }
 
 
