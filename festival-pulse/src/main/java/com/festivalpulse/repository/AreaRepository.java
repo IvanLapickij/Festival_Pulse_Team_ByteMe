@@ -1,6 +1,6 @@
 package com.festivalpulse.repository;
 
-import com.festivalpulse.model.Area;
+import com.festivalpulse.model.FestivalArea;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface AreaRepository extends JpaRepository<Area, Long> {}
+public interface AreaRepository extends JpaRepository<FestivalArea, Long> {}
