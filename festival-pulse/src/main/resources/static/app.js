@@ -265,9 +265,17 @@ function levelColour(level) {
 }
 
 let _orgMap = null;
+let _buildMarkers = null;
 
 function renderAreas() {
   setHeading("Live Map", "Festival Areas");
+
+  if (_orgMap) {
+    if (_buildMarkers) _buildMarkers(false);
+    setTimeout(() => _orgMap.invalidateSize(), 0);
+    return;
+  }
+
   let editMode = false;
   const editMarkers = {}; // areaId -> L.marker (for dragend)
 
@@ -385,8 +393,6 @@ function renderAreas() {
   }
 
   // ── Map init ──────────────────────────────────────────────────────────────
-  if (_orgMap) { _orgMap.remove(); _orgMap = null; }
-
   _orgMap = L.map("festival-map-root", {
     center: FESTIVAL_CENTRE,
     zoom: 16,
@@ -486,6 +492,7 @@ function renderAreas() {
     });
   }
 
+  _buildMarkers = buildMarkers;
   buildMarkers(false);
 }
 
