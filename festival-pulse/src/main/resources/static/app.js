@@ -266,12 +266,13 @@ function levelColour(level) {
 
 let _orgMap = null;
 let _buildMarkers = null;
+let _mapEditMode = false;
 
 function renderAreas() {
   setHeading("Live Map", "Festival Areas");
 
   if (_orgMap) {
-    if (_buildMarkers) _buildMarkers(false);
+    if (!_mapEditMode && _buildMarkers) _buildMarkers(false);
     setTimeout(() => _orgMap.invalidateSize(), 0);
     return;
   }
@@ -308,11 +309,11 @@ function renderAreas() {
 
   document.getElementById("edit-mode-btn").addEventListener("click", () => {
     editMode = !editMode;
+    _mapEditMode = editMode;
     const btn = document.getElementById("edit-mode-btn");
     btn.textContent = editMode ? "✕ Exit Edit" : "✏ Edit Map";
     btn.style.background = editMode ? "#ef4444" : "";
     btn.style.color = editMode ? "#fff" : "";
-    // Rebuild markers with draggable state
     buildMarkers(editMode);
     showEditPanel(editMode);
   });
