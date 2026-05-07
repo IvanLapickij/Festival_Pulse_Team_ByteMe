@@ -40,19 +40,19 @@ Here is a glimpse of the Festival Pulse application in action:
 
 ### 1. Application Live Mapping
 > A real-time overview of the festival grounds with live crowd heatmaps and status indicators.
-![Application Live Mapping](src/main/resources/images/application%20live%20mapping.png)
+![Application Live Mapping](festival-pulse/src/main/resources/images/application%20live%20mapping.png)
 
 ### 2. Reports Page Sample
 > A detailed view of historical and active steward reports for specific zones.
-![Reports Page Sample](src/main/resources/images/reports%20page%20sample.png)
+![Reports Page Sample](festival-pulse/src/main/resources/images/reports%20page%20sample.png)
 
 ### 3. Role Switch Page
 > Interface allowing users to transition between Steward Reporting and Command Center views.
-![Role Switch Page](src/main/resources/images/role%20switch%20page.png)
+![Role Switch Page](festival-pulse/src/main/resources/images/role%20switch%20page.png)
 
 ---
 <div align="center">
-  <img src="src/main/resources/static/ByteMe.png" alt="Byte Me Team Logo" width="150"/>
+  <img src="festival-pulse/src/main/resources/static/ByteMe.png" alt="Byte Me Team Logo" width="150"/>
   <br/>
   <i>Built with ❤️ by Team ByteMe</i>
 </div>
