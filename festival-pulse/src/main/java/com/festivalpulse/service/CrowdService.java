@@ -9,7 +9,7 @@ import com.festivalpulse.model.FestivalArea;
 import com.festivalpulse.repository.AlertRepository;
 import com.festivalpulse.repository.AreaRepository;
 import com.festivalpulse.repository.ReportRepository;
-import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.KafkaOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +22,15 @@ public class CrowdService {
     private final AreaRepository areaRepository;
     private final ReportRepository reportRepository;
     private final AlertRepository alertRepository;
-    private final KafkaTemplate<String, ReportEvent> kafkaTemplate;
+    private final KafkaOperations<String, ReportEvent> kafkaOperations;
 
     public CrowdService(AreaRepository areaRepository, ReportRepository reportRepository,
                         AlertRepository alertRepository,
-                        KafkaTemplate<String, ReportEvent> kafkaTemplate) {
+                        KafkaOperations<String, ReportEvent> kafkaOperations) {
         this.areaRepository = areaRepository;
         this.reportRepository = reportRepository;
         this.alertRepository = alertRepository;
-        this.kafkaTemplate = kafkaTemplate;
+        this.kafkaOperations = kafkaOperations;
     }
 
     @Transactional
@@ -47,7 +47,7 @@ public class CrowdService {
         report.setNote(note);
         reportRepository.save(report);
 
-        kafkaTemplate.send("festival.reports", String.valueOf(areaId),
+        kafkaOperations.send("festival.reports", String.valueOf(areaId),
                 new ReportEvent(areaId, area.getName(), level));
 
         return report;
