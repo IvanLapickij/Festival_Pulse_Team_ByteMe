@@ -1,0 +1,12 @@
+spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    # Prevent the app from failing hard when Kafka is unavailable
+    producer:
+      properties:
+        max.block.ms: 2000
+    listener:
+      missing-topics-fatal: false
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration

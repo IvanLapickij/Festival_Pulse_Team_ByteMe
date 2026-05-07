@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: festival-pulse
+
+  datasource:
+    url: jdbc:h2:mem:festivalpulse
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  sql:
+    init:
+      mode: always
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        "[enable.idempotence]": true
+    consumer:
+      group-id: festival-pulse
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        "[spring.json.trusted.packages]": "com.festivalpulse.*"
+        "[spring.json.value.default.type]": "com.festivalpulse.kafka.ReportEvent"
+
+logging:
+  level:
+    com.festivalpulse: INFO
+
+festival:
+  crowd:
+    alert-threshold: 80

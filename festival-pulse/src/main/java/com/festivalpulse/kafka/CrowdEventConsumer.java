@@ -1,4 +1,4 @@
-package com.festivalpulse.kafka;
+﻿package com.festivalpulse.kafka;
 
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
