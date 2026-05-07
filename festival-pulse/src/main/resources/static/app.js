@@ -18,13 +18,13 @@ function initRole() {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Festival centre: Athlone, County Westmeath, Ireland
-const FESTIVAL_CENTRE = [53.4239, -7.9407];
+const FESTIVAL_CENTRE = [53.42944, -7.90000]; // Ericsson Software Campus, Cornamaddy, Athlone
 const AREA_COORDS = [
-  { name: "Main Stage",      lat: 53.4258, lng: -7.9440, type: "stage",    svgIcon: "stage"    },
-  { name: "Food Village",    lat: 53.4248, lng: -7.9375, type: "food",     svgIcon: "food"     },
-  { name: "Dance Tent",      lat: 53.4225, lng: -7.9435, type: "tent",     svgIcon: "tent"     },
-  { name: "Bar Area",        lat: 53.4232, lng: -7.9380, type: "bar",      svgIcon: "bar"      },
-  { name: "Entrance / Exit", lat: 53.4212, lng: -7.9407, type: "entrance", svgIcon: "entrance" }
+  { name: "Main Stage",      lat: 53.43120, lng: -7.90280, type: "stage",    svgIcon: "stage"    },
+  { name: "Food Village",    lat: 53.43050, lng: -7.89720, type: "food",     svgIcon: "food"     },
+  { name: "Dance Tent",      lat: 53.42820, lng: -7.90260, type: "tent",     svgIcon: "tent"     },
+  { name: "Bar Area",        lat: 53.42880, lng: -7.89760, type: "bar",      svgIcon: "bar"      },
+  { name: "Entrance / Exit", lat: 53.42680, lng: -7.90000, type: "entrance", svgIcon: "entrance" }
 ];
 const CROWD_WEIGHTS = { LOW: 0.25, MEDIUM: 0.65, FULL: 1.0 };
 
@@ -376,6 +376,9 @@ function renderAreas() {
       document.getElementById("radius-val").textContent = boundaryRadius + "m";
       boundaryCircle.setRadius(boundaryRadius);
     });
+    // Pre-fill eircode input with Ericsson campus hint
+    const ei = document.getElementById("eircode-input");
+    if (ei && !ei.value) ei.placeholder = "e.g. N37 HD52 (Ericsson Athlone)";
 
     // Eircode geocoding
     document.getElementById("eircode-btn").addEventListener("click", async () => {
@@ -476,6 +479,15 @@ function renderAreas() {
     radius: boundaryRadius, color: "#2563eb", weight: 2, dashArray: "8 6",
     fillColor: "#2563eb", fillOpacity: 0.05
   }).addTo(_orgMap);
+
+  // Draggable centre handle for boundary circle (organiser edit mode only)
+  const centreHandleIcon = L.divIcon({ className: "arena-handle arena-centre-handle", html: "⊕", iconSize: [24,24], iconAnchor: [12,12] });
+  const centreHandle = L.marker(mapCentre, { icon: centreHandleIcon, draggable: true, zIndexOffset: 1000 });
+  if (isOrganiser) centreHandle.addTo(_orgMap);
+  centreHandle.on("drag", e => {
+    mapCentre = [e.target.getLatLng().lat, e.target.getLatLng().lng];
+    boundaryCircle.setLatLng(mapCentre);
+  });
 
   // Heatmap layer
   const heatLayer = L.heatLayer(buildHeatPoints(state.areas), {
